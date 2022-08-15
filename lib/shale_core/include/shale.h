@@ -16,9 +16,9 @@ typedef struct device_driver driver_t;
 typedef struct device device_t;
 
 typedef struct device {
-    const uint8_t name[NAME_LENGTH];
-    const class_t *dev_class;
-    const driver_t *driver;
+    uint8_t name[NAME_LENGTH];
+    class_t *dev_class;
+    driver_t *driver;
     void *class_data;
     void *driver_data;
 } device_t;

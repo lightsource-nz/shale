@@ -9,9 +9,12 @@ static class_t *class_table[SHALE_MAX_CLASSES];
 static driver_t *driver_table[SHALE_MAX_DRIVERS];
 static device_t *device_table[SHALE_MAX_DEVICES];
 
-static uint8_t class_count, driver_count, device_count;
+static uint8_t class_count, driver_count, device_count = 0;
 
-void shale_init();
+void shale_init()
+{
+
+}
 
 class_t *shale_device_class(uint8_t id)
 {
@@ -35,7 +38,7 @@ device_t *shale_device(uint8_t id)
     return NULL;
 }
 
-uint8_t shale_device_class_create(class_t *dev_class)
+uint8_t shale_class_create(class_t *dev_class)
 {
     if(class_count >= SHALE_MAX_CLASSES)
         return ERROR_MAX_ENTITIES;
@@ -43,7 +46,7 @@ uint8_t shale_device_class_create(class_t *dev_class)
     class_table[id] = dev_class;
     return id;
 }
-uint8_t shale_device_driver_create(driver_t *driver)
+uint8_t shale_driver_create(driver_t *driver)
 {
     if(driver_count >= SHALE_MAX_DRIVERS)
         return ERROR_MAX_ENTITIES;

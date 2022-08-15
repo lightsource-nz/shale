@@ -21,4 +21,6 @@ typedef struct spi_port {
     uint8_t pin_dc;
 } spi_port_t;
 
+void shale_oled_spi_device_setup(spi_port_t *port);
+
 #endif

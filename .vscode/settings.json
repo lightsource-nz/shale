@@ -1,0 +1,10 @@
+{
+    "cmake.generator": "NMake Makefiles",
+    "cmake.configureSettings": {
+        "PICO_SDK_PATH": "../../pico-sdk"
+    },
+    "C_Cpp.autoAddFileAssociations": false,
+    "C_Cpp.loggingLevel": "Information",
+    "cortex-debug.armToolchainPath": "D:/workspaces/embedded/tools/arm-gcc/11.2/bin"
+    //"cortex-debug.openocdPath": "D:/workspaces/embedded/tools/openocd/bin/openocd.exe"
+}
