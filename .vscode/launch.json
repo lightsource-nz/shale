@@ -12,46 +12,14 @@
             "configFiles": ["${workspaceRoot}/openocd.cfg"],
             "request": "launch",
             "executable": "${command:cmake.launchTargetPath}",
-            //"gdbTarget": "localhost:3333",
-            "showDevDebugOutput": "parsed",
-            //"serverpath": "D:/workspaces/embedded/tools/openocd/bin/openocd.exe",
-            //"armToolchainPath": "D:/workspaces/embedded/tools/arm-gcc/11.2 2022.02/bin"
-
-            //"armToolchainPath": "/workspaces/embedded/tools/gcc-arm-none-eabi-10.3-2021.07/bin",
-            //"serverpath": "/workspaces/embedded/tools/openocd_picoprobe/openocd.exe",
-            //"windows": {
-            //    "serverpath": "D:/workspaces/embedded/tools/openocd/bin",
-            //    "armToolchainPath": "D:/workspaces/embedded/tools/arm-gcc/11.3.rel1/bin"
-
-            //}
-        },
-        {
-            "name": "cortex-debug launch",
-            "type": "cortex-debug",
-            "servertype": "openocd",
-            "configFiles": ["${workspaceRoot}/openocd.cfg"],
-            "request": "launch",
-            
-            "executable": "${command:cmake.getLaunchTargetPath}",
-            "armToolchainPath": "/workspaces/embedded/tools/gcc-arm-none-eabi-10.3-2021.07/bin",
-            
-            "serverpath": "/workspaces/embedded/tools/openocd_picoprobe/openocd.exe",
             "windows": {
-                //[x"serverpath": "/workspaces/embedded/tools/openocd_picoprobe/openocd.exe"
+                "serverpath": "D:/workspaces/embedded/tools/openocd/bin/openocd.exe"
+            },
 
+            "linux": {
+                "armToolchainPath": "/usr/bin",
+                "gdbPath": "gdb-multiarch"
             }
-        },
-        {
-            "name": "OpenOCD",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${command:cmake.launchTargetPath}",
-            "cwd": "${workspaceRoot}/build",
-            "externalConsole": true,
-            "debugServerPath": "${workspaceFolder}/../../tools/openocd_install/openocd.exe",
-            "MIMode": "gdb",
-            "miDebuggerPath": "${workspaceFolder}/../../tools/gcc-arm-none-eabi-10.3-2021.07/bin/arm-none-eabi-gdb.exe",
-            "miDebuggerServerAddress": "localhost:3333"
         },
         {
             "name": "host-mode",
