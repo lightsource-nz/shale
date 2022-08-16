@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define NAME_LENGTH             16
+#define NAME_LENGTH             32
 #define CLASS_MAX_DRIVERS       8
 
 #define SHALE_MAX_CLASSES       8
@@ -20,18 +20,21 @@ typedef struct device {
     class_t *dev_class;
     driver_t *driver;
     void *class_data;
+    void *driver_api;
     void *driver_data;
 } device_t;
 
 typedef struct device_class {
-    const uint8_t name[NAME_LENGTH];
+    const uint8_t id[NAME_LENGTH];
     const uint8_t data_length;
     uint8_t driver_count;
     driver_t *drivers[CLASS_MAX_DRIVERS];
 } class_t;
 
 typedef struct device_driver {
-    const uint8_t name[NAME_LENGTH];
+    const uint8_t id[NAME_LENGTH];
+    const uint8_t class_id[NAME_LENGTH];
+    const void *driver_api;
     const uint8_t data_length;
 } driver_t;
 

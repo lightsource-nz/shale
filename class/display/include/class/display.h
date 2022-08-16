@@ -3,11 +3,55 @@
 
 #include "shale.h"
 
-#define CLASS_NAME_DISPLAY = "display"
+#define CLASS_ID_DISPLAY "shale.class.display"
+
+#define DISPLAY_BUFFER_SINGLE           0
+#define DISPLAY_BUFFER_DOUBLE           1
+#define DISPLAY_BUFFER_TRIPLE           2
+
+#define DISPLAY_CHANNELS_BW             0
+#define DISPLAY_CHANNELS_RGB            1
+
+#define DISPLAY_ENC_MONO                0
+#define DISPLAY_ENC_GRAY_256            1
+#define DISPLAY_ENC_RGB_646             2
+#define DISPLAY_ENC_RGB_666             3
+#define DISPLAY_ENC_RGB_888             4
+
+
+// geometric primitives
+typedef struct vector2b {
+    uint8_t x;
+    uint8_t y;
+} vector2b_t;
+
+// represents a point in 8-bit screen coordinate space
+typedef vector2b_t point2_t;
+// represents a screen resolution of up to 255x255 pixels
+typedef vector2b_t dimension_t;
+
+typedef struct display_api {
+    dimension_t (*get_dimension)(device_t*);
+    uint8_t (*get_channels)(device_t*);
+    uint8_t (*get_encoding)(device_t*);
+    uint8_t (*get_bpp)(device_t*);
+} display_api_t;
 
 typedef struct display_driver {
-
+    const uint8_t id[NAME_LENGTH];
+    const uint8_t class_id[NAME_LENGTH];
+    const display_api_t *driver_api;
+    const uint8_t data_length;
 } display_driver_t;
+
+typedef struct display_device {
+    uint8_t name[NAME_LENGTH];
+    class_t *dev_class;                 // should always be 
+    display_driver_t *driver;
+    display_data_t *class_data;
+    void *driver_api;
+    void *driver_data;
+} display_device_t;
 
 typedef struct display_data {
     
