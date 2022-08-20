@@ -21,6 +21,9 @@ typedef struct sh1107_device {
     sh1107_data_t *driver_data;
 } sh1107_device_t;
 
+driver_t shale_driver_sh1107;
+
 void shale_driver_sh1107_init();
+void shale_driver_sh1107_device_create(sh1107_device_t *dev);
 
 #endif

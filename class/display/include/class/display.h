@@ -54,9 +54,16 @@ typedef struct display_device {
 } display_device_t;
 
 typedef struct display_data {
-    
+    dimension_t dimension;
 } display_data_t;
 
+extern class_t shale_class_display;
+
 void shale_class_display_init();
+
+dimension_t shale_display_dimension_get(display_device_t *dev);
+uint8_t shale_display_channels_get(display_device_t *dev);
+uint8_t shale_display_encoding_get(display_device_t *dev);
+uint8_t shale_display_bpp_get(display_device_t *dev);
 
 #endif
