@@ -44,6 +44,10 @@ typedef struct display_driver {
     const uint8_t data_length;
 } display_driver_t;
 
+typedef struct display_data {
+    dimension_t dimension;
+} display_data_t;
+
 typedef struct display_device {
     uint8_t name[NAME_LENGTH];
     class_t *dev_class;                 // should always be 
@@ -52,10 +56,6 @@ typedef struct display_device {
     void *driver_api;
     void *driver_data;
 } display_device_t;
-
-typedef struct display_data {
-    dimension_t dimension;
-} display_data_t;
 
 extern class_t shale_class_display;
 
