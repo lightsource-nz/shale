@@ -21,6 +21,11 @@ typedef struct spi_port {
     uint8_t pin_dc;
 } spi_port_t;
 
+typedef union oled_port {
+    i2c_port_t i2c;
+    spi_port_t spi;
+} oled_port_t;
+
 void shale_oled_spi_device_setup(spi_port_t *port);
 
 #endif
