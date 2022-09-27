@@ -22,6 +22,11 @@
 #define ERROR_MAX_ENTITIES              UINT8_MAX
 #define ERROR_ENTITY_INVALID            (UINT8_MAX-1)
 
+#define SHALE_DEVICE_STATE_INIT         0
+#define SHALE_DEVICE_STATE_ACTIVE       1
+#define SHALE_DEVICE_STATE_SUSPEND      2
+#define SHALE_DEVICE_STATE_ERROR        UINT8_MAX
+
 typedef struct device_class class_t;
 typedef struct device_driver driver_t;
 typedef struct device device_t;
@@ -46,6 +51,7 @@ typedef struct device_driver {
 typedef struct device {
     uint8_t name[NAME_LENGTH];
     driver_t *driver;
+    uint8_t state;
     uint8_t *class_data;
     uint8_t *driver_data;
 } device_t;
@@ -55,9 +61,5 @@ void shale_init();
 class_t *shale_class_new(uint8_t *id, size_t data_length, void (*init_device)(device_t *, driver_t *));
 driver_t *shale_driver_new(uint8_t *id, class_t *drv_class, void *drv_api, size_t data_length, void (*init_device)(device_t *));
 device_t *shale_device_new(uint8_t *id, driver_t *dev_driver);
-
-uint8_t shale_class_register(class_t *dev_class);
-uint8_t shale_driver_register(driver_t *driver);
-uint8_t shale_device_register(device_t *device);
 
 #endif

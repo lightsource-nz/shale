@@ -1,7 +1,6 @@
 #include <oled.h>
-#include "hardware/spi.h"
 
-void shale_oled_spi_device_setup(spi_port_t *port)
+void shale_oled_ioport_init(ioport_t *port)
 {
-
+    
 }
