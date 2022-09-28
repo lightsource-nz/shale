@@ -10,7 +10,7 @@
 
 typedef struct sh1107_data {
     uint8_t transport_type;
-    void *transport;
+    ioport_t *transport;
 } sh1107_data_t;
 
 typedef struct sh1107_device {

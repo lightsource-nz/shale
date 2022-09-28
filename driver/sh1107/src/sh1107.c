@@ -32,6 +32,18 @@ void shale_driver_sh1107_init_device(device_t *generic_device)
 {
     sh1107_device_t *device = (sh1107_device_t *)generic_device;
     device->driver_data->transport_type = SH1107_TRANSPORT_DEFAULT;
+    switch(device->driver_data->transport_type) {
+        case OLED_TRANSPORT_SPI:
+            device->driver_data->transport->bind.spi.pin_dc = OLED_PIN_NC;
+            device->driver_data->transport->bind.spi.pin_miso = OLED_PIN_NC;
+            device->driver_data->transport->bind.spi.pin_mosi = OLED_PIN_NC;
+            device->driver_data->transport->bind.spi.pin_sck = OLED_PIN_NC;
+            break;
+        case OLED_TRANSPORT_I2C:
+            device->driver_data->transport->bind.i2c.pin_scl = OLED_PIN_NC;
+            device->driver_data->transport->bind.i2c.pin_sda = OLED_PIN_NC;
+            break;
+    }
 }
 driver_t *shale_driver_sh1107()
 {
