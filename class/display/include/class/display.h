@@ -35,6 +35,8 @@ typedef struct display_api {
     uint8_t (*get_channels)(device_t*);
     uint8_t (*get_encoding)(device_t*);
     uint8_t (*get_bpp)(device_t*);
+    uint16_t (*get_px_addr)(device_t*, point2_t);
+    void (*device_write)(device_t*, uint16_t, size_t, uint32_t);
 } display_api_t;
 
 typedef struct display_driver {
@@ -46,11 +48,16 @@ typedef struct display_driver {
 
 typedef struct display_data {
     dimension_t dimension;
+    uint8_t channels;
+    uint8_t encoding;
+    uint8_t bpp;
+    uint8_t framerate_hz;
+    uint8_t *buffer_start;
 } display_data_t;
 
 typedef struct display_device {
     uint8_t name[NAME_LENGTH];
-    class_t *dev_class;                 // should always be 
+    class_t *dev_class;             // should always be class_display
     display_driver_t *driver;
     display_data_t *class_data;
     void *driver_api;
@@ -65,5 +72,7 @@ dimension_t shale_display_dimension_get(display_device_t *dev);
 uint8_t shale_display_channels_get(display_device_t *dev);
 uint8_t shale_display_encoding_get(display_device_t *dev);
 uint8_t shale_display_bpp_get(display_device_t *dev);
+uint8_t shale_display_framerate_get(display_device_t *dev);
+void shale_display_framerate_set(display_device_t *dev, uint8_t rate_hz);
 
 #endif

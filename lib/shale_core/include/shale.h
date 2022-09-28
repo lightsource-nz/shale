@@ -17,6 +17,10 @@
 #define SHALE_MAX_DRIVERS       16
 #define SHALE_MAX_DEVICES       24
 
+#define Shale_Static_Class(name) class_t* __section(".shaledata.classes") _##name = &name
+#define Shale_Static_Driver(name) driver_t* __section(".shaledata.drivers") _##name = &name
+#define Shale_Static_Device(name) device_t* __section(".shaledata.devices") _##name = &name
+
 typedef struct device_class class_t;
 typedef struct device_driver driver_t;
 typedef struct device device_t;

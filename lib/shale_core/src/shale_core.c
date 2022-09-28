@@ -5,6 +5,13 @@
 #define ERROR_MAX_ENTITIES          UINT8_MAX;
 #define ERROR_ENTITY_INVALID        UINT8_MAX-1;
 
+extern void const *__shaledata_classes_start;
+extern void const *__shaledata_classes_end;
+extern void const *__shaledata_drivers_start;
+extern void const *__shaledata_drivers_end;
+extern void const *__shaledata_devices_start;
+extern void const *__shaledata_devices_end;
+
 static class_t *class_table[SHALE_MAX_CLASSES];
 static driver_t *driver_table[SHALE_MAX_DRIVERS];
 static device_t *device_table[SHALE_MAX_DEVICES];
