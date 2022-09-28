@@ -37,7 +37,7 @@ typedef struct spi_port {
 typedef union ioport_bind {
     i2c_port_t i2c;
     spi_port_t spi;
-} oled_port_bind_t;
+} ioport_bind_t;
 
 // a (hopefully) portable structure representing the hardware
 // of an IO-port peripheral

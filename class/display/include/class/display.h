@@ -31,13 +31,15 @@ typedef vector2b_t point2_t;
 // represents a screen resolution of up to 255x255 pixels
 typedef vector2b_t dimension_t;
 
+typedef struct display_device display_device_t;
+
 typedef struct display_api {
-    dimension_t (*get_dimension)(device_t*);
-    uint8_t (*get_channels)(device_t*);
-    uint8_t (*get_encoding)(device_t*);
-    uint8_t (*get_bpp)(device_t*);
-    uint16_t (*get_px_addr)(device_t*, point2_t);
-    void (*device_write)(device_t*, uint16_t, size_t, uint32_t);
+    dimension_t (*get_dimension)(display_device_t*);
+    uint8_t (*get_channels)(display_device_t*);
+    uint8_t (*get_encoding)(display_device_t*);
+    uint8_t (*get_bpp)(display_device_t*);
+    uint16_t (*get_px_addr)(display_device_t*, point2_t);
+    void (*device_write)(display_device_t*, uint16_t, size_t, uint32_t);
 } display_api_t;
 
 typedef struct display_driver {
