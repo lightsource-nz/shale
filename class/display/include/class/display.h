@@ -18,6 +18,7 @@
 #define DISPLAY_ENC_RGB_666             3
 #define DISPLAY_ENC_RGB_888             4
 
+#define DISPLAY_CLASS_DATA_SIZE         (sizeof(display_data_t))
 
 // geometric primitives
 typedef struct vector2b {
@@ -25,7 +26,7 @@ typedef struct vector2b {
     uint8_t y;
 } vector2b_t;
 
-// represents a point in 8-bit screen coordinate space
+// represents a point in 16-bit screen coordinate space
 typedef vector2b_t point2_t;
 // represents a screen resolution of up to 255x255 pixels
 typedef vector2b_t dimension_t;
@@ -64,9 +65,9 @@ typedef struct display_device {
     void *driver_data;
 } display_device_t;
 
-extern class_t shale_class_display;
-
+class_t *shale_class_display();
 void shale_class_display_init();
+void shale_class_display_init_device(device_t *device, driver_t *driver);
 
 dimension_t shale_display_dimension_get(display_device_t *dev);
 uint8_t shale_display_channels_get(display_device_t *dev);

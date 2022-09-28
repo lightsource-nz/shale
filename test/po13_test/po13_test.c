@@ -5,16 +5,17 @@
 #include <pico/platform.h>
 #include <stdlib.h>
 
+#define ID_DISPLAY_MAIN "device:display.main"
+
 void main()
 {
     shale_init();
     shale_class_display_init();
     shale_driver_sh1107_init();
 
-    sh1107_device_t *display_main = malloc(sizeof(device_t));
-    display_main->class_data = malloc(sizeof(display_data_t));
-    display_main->driver_data = malloc(sizeof(sh1107_data_t));
+    class_t *class_display = shale_class_display();
+    driver_t *driver_sh1107 = shale_driver_sh1107();
 
-    shale_device_create((device_t *)display_main);
+    sh1107_device_t *display_main = (sh1107_device_t *)shale_device_new(ID_DISPLAY_MAIN, driver_sh1107);
     __breakpoint();
 }
