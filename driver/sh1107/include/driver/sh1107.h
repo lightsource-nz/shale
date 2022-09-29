@@ -9,8 +9,7 @@
 #define DRIVER_ID_SH1107        "shale:driver:sh1107"
 
 typedef struct sh1107_data {
-    uint8_t transport_type;
-    ioport_t *transport;
+    ioport_t *port;
 } sh1107_data_t;
 
 typedef struct sh1107_device {

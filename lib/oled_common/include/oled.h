@@ -8,9 +8,9 @@
 #   include <hardware/i2c.h>
 #endif
 
-#define OLED_TRANSPORT_I2C          0
-#define OLED_TRANSPORT_SPI          1
-#define OLED_TRANSPORT_PARALLEL     2
+#define OLED_PORT_I2C          0
+#define OLED_PORT_SPI          1
+#define OLED_PORT_PARALLEL     2
 
 #define OLED_PIN_NC                 UINT8_MAX
 
