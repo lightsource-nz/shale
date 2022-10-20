@@ -10,12 +10,12 @@
             "servertype": "openocd",
             "cwd": "${workspaceRoot}/build",
             "configFiles": ["${workspaceRoot}/openocd.cfg"],
-            "request": "launch",
+            "svdFile": "${workspaceRoot}/../pico-sdk/src/rp2040/hardware_regs/rp2040.svd",
+            "request": "attach",
             "executable": "${command:cmake.launchTargetPath}",
             "windows": {
                 "serverpath": "D:/workspaces/embedded/tools/openocd/bin/openocd.exe"
             },
-
             "linux": {
                 "armToolchainPath": "/usr/bin",
                 "gdbPath": "gdb-multiarch"

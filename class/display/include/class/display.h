@@ -18,6 +18,14 @@
 #define DISPLAY_ENC_RGB_666             3
 #define DISPLAY_ENC_RGB_888             4
 
+#define DISPLAY_GET_DIMENSION           0
+#define DISPLAY_GET_ENCODING            1
+#define DISPLAY_GET_BPP                 2
+#define DISPLAY_GET_FRAMERATE           3
+
+#define DISPLAY_SET_DIMENSION           8
+#define DISPLAY_SET_FRAMERATE           9
+
 #define DISPLAY_CLASS_DATA_SIZE         (sizeof(display_data_t))
 
 // geometric primitives
@@ -69,7 +77,8 @@ typedef struct display_device {
 
 class_t *shale_class_display();
 void shale_class_display_init();
-void shale_class_display_init_device(device_t *device, driver_t *driver);
+void shale_class_display_init_device(device_t *device);
+uint8_t shale_class_display_handle_message(device_t *device, msg_handle_t *handle);
 
 dimension_t shale_display_dimension_get(display_device_t *dev);
 uint8_t shale_display_channels_get(display_device_t *dev);

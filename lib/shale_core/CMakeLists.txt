@@ -11,9 +11,11 @@ target_sources(
     ${CMAKE_CURRENT_LIST_DIR}/src/shale_core.c
 )
 
+pico_set_linker_script(shale_core ${CMAKE_CURRENT_LIST_DIR}/memmap_shale.ld)
+
 target_link_libraries(
     shale_core
     INTERFACE
-
+    pico_util
 )
 
