@@ -17,7 +17,7 @@ void shale_class_display_init_device(device_t *device)
 }
 // TODO add return codes to allow message handlers to either consume messages,
 //  or delegate handling to the driver level
-uint8_t shale_class_display_handle_message(device_t *device, msg_handle_t *handle)
+Message_Handler(shale_class_display_handle_message)
 {
     assert_device_class(message.target, CLASS_ID_DISPLAY);
 
@@ -25,8 +25,9 @@ uint8_t shale_class_display_handle_message(device_t *device, msg_handle_t *handl
     switch (handle->msg.msg_id)
     {
     case DISPLAY_GET_DIMENSION:
-        dimension_t reply = shale_malloc(sizeof(dimension_t));
-        reply = disp->class_data->dimension;
+        dimension_t *reply = shale_malloc(sizeof(dimension_t));
+        *reply = disp->class_data->dimension;
+        handle->reply = reply;
         return MX_DONE;
     
     default:

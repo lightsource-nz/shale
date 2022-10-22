@@ -1,6 +1,5 @@
-#define __SHALE_SOURCE__
 #include "driver/sh1107.h"
-#include "shale_internal.h"
+#include "driver/sh1107_internal.h"
 
 #include <stdlib.h>
 
@@ -18,22 +17,13 @@ uint16_t sh1107_get_px_addr(device_t *device, point2_t pixel);
 #   define SH1107_I2C_PORT_DEFAULT 0
 #endif
 
-static display_api_t api_sh1107 = {
-    .get_dimension  = &shale_display_dimension_get,
-    .get_channels   = &shale_display_channels_get,
-    .get_encoding   = &shale_display_encoding_get,
-    .get_bpp        = &shale_display_bpp_get,
-    .get_px_addr    = &sh1107_get_px_addr,
-    .device_write   = &sh1107_device_write
-};
-
 static driver_t *driver_sh1107;
 
 void shale_driver_sh1107_init()
 {
     class_t *driver_class = shale_class_display();
     assert_class(driver_class);
-    driver_sh1107 = shale_driver_new(DRIVER_ID_SH1107, driver_class, &api_sh1107, sizeof(sh1107_data_t), &shale_driver_sh1107_init_device);
+    driver_sh1107 = shale_driver_new(DRIVER_ID_SH1107, driver_class, sizeof(sh1107_data_t), &shale_driver_sh1107_init_device, &shale_driver_sh1107_handle_message);
 }
 void shale_driver_sh1107_init_device(device_t *generic_device)
 {
@@ -53,6 +43,16 @@ void shale_driver_sh1107_init_device(device_t *generic_device)
             device->driver_data->port->bind.i2c.pin_sda = OLED_PIN_NC;
             break;
     }
+}
+Message_Handler(shale_driver_sh1107_handle_message)
+{
+    switch(handle->msg.msg_id) {
+        case DISPLAY_SET_DIMENSION:
+        /* TODO validate dimensions against hw */
+        return MX_DELEGATE;
+    }
+    // message not handled, pass to parent
+    return MX_DELEGATE;
 }
 driver_t *shale_driver_sh1107()
 {

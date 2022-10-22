@@ -77,8 +77,6 @@ typedef struct display_device {
 
 class_t *shale_class_display();
 void shale_class_display_init();
-void shale_class_display_init_device(device_t *device);
-uint8_t shale_class_display_handle_message(device_t *device, msg_handle_t *handle);
 
 dimension_t shale_display_dimension_get(display_device_t *dev);
 uint8_t shale_display_channels_get(display_device_t *dev);

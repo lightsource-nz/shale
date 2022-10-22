@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #define shale_malloc malloc
 
@@ -136,11 +137,26 @@ typedef struct msg_handle {
 typedef void (*device_init_t)(device_t *);
 typedef uint8_t (*msg_handler_t)(device_t *, msg_handle_t *);
 
+#define Message_Handler(name) \
+           uint8_t name(device_t *device, msg_handle_t *handle)
+
+#define LOG_TRACE           "TRACE"
+#define LOG_DEBUG           "DEBUG"
+#define LOG_INFO            "INFO"
+#define LOG_WARN            "WARN"
+#define LOG_ERROR           "ERROR"
+
+#define log_trace(format, ...) shale_logv(LOG_TRACE, (format), __VA_ARGS__)
+#define shale_log(level, format, ...) shale_logv(level, (format), __VA_ARGS__)
+#define shale_logv(level, format, args) vprintf("[##level##]: " format, args)  
+
+// message handler response codes
 #define MX_DONE             0x00
-#define MX_RESPOND          0x01
-#define MX_DELEGATE         0x02
+#define MX_DELEGATE         0x01
+#define MX_FORWARD          0x02
 #define MX_ERROR            0xFF
 
+// message delivery status codes
 #define MXS_QUEUED          0x00
 #define MXS_SENT            0x01
 #define MXS_RECEIVED        0x02
@@ -149,7 +165,7 @@ typedef uint8_t (*msg_handler_t)(device_t *, msg_handle_t *);
 
 #define mx(target, id) mx_p(target, id, NULL)
 #define mx_p(target, id, param) \
-    shale_message_send({target, id, param})
+    shale_message_send((message_t){target, id, param})
 
 void shale_init();
 msg_handle_t *shale_message_send(message_t message);

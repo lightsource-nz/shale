@@ -1,5 +1,5 @@
-#ifndef _SHALE_DRIVER_SH1107_H
-#define _SHALE_DRIVER_SH1107_H
+#ifndef _DRIVER_SH1107_H
+#define _DRIVER_SH1107_H
 
 #include "shale.h"
 #include "class/display.h"
