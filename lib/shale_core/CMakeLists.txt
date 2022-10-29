@@ -9,6 +9,7 @@ target_include_directories(
 target_sources(
     shale_core INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/src/shale_core.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/message.c
 )
 
 pico_set_linker_script(shale_core ${CMAKE_CURRENT_LIST_DIR}/memmap_shale.ld)
@@ -16,6 +17,7 @@ pico_set_linker_script(shale_core ${CMAKE_CURRENT_LIST_DIR}/memmap_shale.ld)
 target_link_libraries(
     shale_core
     INTERFACE
+    hardware_exception
     pico_util
 )
 

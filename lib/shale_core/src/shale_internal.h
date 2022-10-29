@@ -21,22 +21,14 @@ typedef struct thread_condition {
     uint8_t status_awaited;
 } thread_condition_t;
 
-typedef struct class_table {
-    class_t *p_class;
-    queue_t *queue;
-    device_init_t init;
-    msg_handler_t handler;
-} class_table_t;
-typedef struct driver_table {
-    driver_t *driver;
-    queue_t *queue;
-    device_init_t init;
-    msg_handler_t handler;
-} driver_table_t;
+uint8_t _class_register(class_t *_class);
+uint8_t _driver_register(driver_t *driver);
+uint8_t _device_register(device_t *device);
 
-class_table_t *_class_table_lookup(class_t *p_class);
-driver_table_t *_driver_table_lookup(driver_t *driver);
+class_t *_class_table_lookup(uint8_t *id);
+driver_t *_driver_table_lookup(uint8_t *id);
+device_t *_device_table_lookup(uint8_t *id);
 
-uint32_t _handle_id_new();
+void _dispatch_message_for_device(device_t *device);
 
 #endif

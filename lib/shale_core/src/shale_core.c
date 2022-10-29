@@ -13,38 +13,36 @@ extern void const *__shaledata_drivers_end;
 extern void const *__shaledata_devices_start;
 extern void const *__shaledata_devices_end;
 
-static class_table_t *class_table[SHALE_MAX_CLASSES];
-static driver_table_t *driver_table[SHALE_MAX_DRIVERS];
+static class_t *class_table[SHALE_MAX_CLASSES];
+static driver_t *driver_table[SHALE_MAX_DRIVERS];
 static device_t *device_table[SHALE_MAX_DEVICES];
 
-static uint8_t thread_state = SHALE_THREAD_ACTIVE;
-static thread_condition_t thread_cond = { NULL, MXS_QUEUED };
-
 static uint8_t class_count, driver_count, device_count = 0;
-static uint32_t next_msgid = 0;
 static int mq_lock;
 
-class_table_t *_class_table_lookup(class_t *p_class)
+class_t *_class_lookup(uint8_t *id)
 {
     for(int i = 0; i < SHALE_MAX_CLASSES; i++) {
-        if(class_table[i]->p_class == p_class)
+        if(strcmp(class_table[i]->id, id))
             return class_table[i];
     }
     return NULL;
 }
-driver_table_t *_driver_table_lookup(driver_t *driver)
+driver_t *_driver_lookup(uint8_t *id)
 {
     for(int i = 0; i < SHALE_MAX_DRIVERS; i++) {
-        if(driver_table[i]->driver == driver)
+        if(strcmp(driver_table[i]->id, id))
             return driver_table[i];
     }
     return NULL;
 }
-
-// TODO this function will need to be thread-safe if we run on both cores
-uint32_t _handle_id_new()
+device_t *_device_lookup(uint8_t *id)
 {
-    return next_msgid++;
+    for(int i = 0; i < SHALE_MAX_DEVICES; i++) {
+        if(strcmp(device_table[i]->id, id))
+            return device_table[i];
+    }
+    return NULL;
 }
 
 void shale_init()
@@ -56,93 +54,96 @@ void shale_init()
     // shale_process_static_drivers();
 }
 
-msg_handle_t *shale_message_send(message_t message)
+void _dispatch_message_for_device(device_t *device)
 {
-    msg_handle_t *handle = shale_malloc(sizeof(msg_handle_t));
-    handle->handle_id = _handle_id_new();
-    handle->msg = message;
-    handle->status = MXS_QUEUED;
-    handle->reply = NULL;
-    class_table_t *target_class = _class_table_lookup(message.target->driver->driver_class);
-    queue_add_blocking(target_class->queue, handle);
-    return handle;
-}
-void shale_message_await(msg_handle_t *handle, uint8_t status)
-{
-    thread_cond = (thread_condition_t) { handle, status };
-    thread_state = SHALE_THREAD_BLOCKED;
-    // TODO implement yield to message scheduler
-}
+    msg_handle_t *handle;
+    while(queue_try_peek(device->queue, &handle)) {
+        uint8_t status = device->driver->driver_class->events.message(handle->msg.target, handle);
+        switch(status) {
+            case MX_DONE:
+            break;
+            case MX_FORWARD:
+            queue_t *next_q = handle->dest->queue;
+            if(queue_try_add(next_q, handle)) {
+                if(!queue_try_remove(device->queue, &handle)) {
+                    // TODO log queueing error
 
-uint8_t s_class_register(class_table_t *dev_class);
-class_t *shale_class_new(uint8_t *id, size_t data_length, device_init_t init, msg_handler_t handler)
+                }
+            }
+            else
+            {
+                // TODO log overflow condition
+            }
+            break;
+        }
+    }
+
+}
+class_t *shale_class_new(uint8_t *id, size_t data_length, device_init_t init, msg_handler_t message)
 {
-    class_table_t *table_obj = shale_malloc(sizeof(class_table_t));
-    table_obj->queue = shale_malloc(sizeof(queue_t));
-    queue_init_with_spinlock(table_obj->queue, sizeof(msg_handle_t), SHALE_QUEUE_DEPTH, mq_lock);
     class_t *class_obj = shale_malloc(sizeof (class_t));
     strcpy(class_obj->id, id);
     class_obj->data_length = data_length;
-    table_obj->p_class = class_obj;
-    table_obj->init = init;
-    table_obj->handler = handler;
-    s_class_register(table_obj);
+    class_obj->events.init = init;
+    class_obj->events.message = message;
+    _class_register(class_obj);
     return class_obj;
 }
-uint8_t s_class_register(class_table_t *table)
+uint8_t _class_register(class_t *_class)
 {
     if(class_count >= SHALE_MAX_CLASSES)
         return ERROR_MAX_ENTITIES;
     uint8_t id = class_count++;
-    class_table[id] = table;
+    class_table[id] = _class;
     return SHALE_SUCCESS;
 }
-uint8_t s_driver_register(driver_table_t *driver);
+uint8_t _class_add_driver(class_t *_class, driver_t *driver)
+{
+
+}
 driver_t *shale_driver_new(uint8_t *id, class_t *drv_class, size_t data_length,
-    device_init_t init, msg_handler_t handler)
+    device_init_t init, msg_handler_t message)
 {
     assert_class(drv_class);
-    driver_table_t *table_obj = shale_malloc(sizeof(driver_table_t));
-    table_obj->queue = shale_malloc(sizeof(queue_t));
-    queue_init_with_spinlock(table_obj->queue,sizeof(message_t), SHALE_QUEUE_DEPTH, mq_lock);
     driver_t *driver_obj = shale_malloc(sizeof(driver_t));
     strcpy(driver_obj->id, id);
     driver_obj->driver_class = drv_class;
     driver_obj->data_length = data_length;
-    table_obj->driver = driver_obj;
-    table_obj->init = init;
-    table_obj->handler = handler;
-    s_driver_register(table_obj);
+    driver_obj->events.init = init;
+    driver_obj->events.message = message;
+    _driver_register(driver_obj);
     return driver_obj;
 }
-uint8_t s_driver_register(driver_table_t *table)
+// register driver in global and class-local driver tables
+uint8_t _driver_register(driver_t *driver)
 {
     if(driver_count >= SHALE_MAX_DRIVERS)
         return ERROR_MAX_ENTITIES;
-    uint8_t id = driver_count++;
-    driver_table[id] = table;
-    if(table->driver->driver_class->driver_count >= SHALE_CLASS_MAX_DRIVERS)  {
-        return ERROR_MAX_ENTITIES;
+    uint8_t status = _class_add_driver(driver->driver_class, driver);
+    if(status != SHALE_SUCCESS) {
+        return status;
     }
+    driver_table[driver_count++] = driver;
     return SHALE_SUCCESS;
 }
-uint8_t s_device_register(device_t *device);
 // allocate device memory, and call class/driver init handlers
 device_t *shale_device_new(uint8_t *id, driver_t *dev_driver)
 {
     assert_class(dev_driver->driver_class);
     assert_driver(dev_driver);
     device_t *device_obj = shale_malloc(sizeof(device_t));
+    device_obj->queue = shale_malloc(sizeof(queue_t));
+    queue_init_with_spinlock(device_obj->queue,sizeof(msg_handle_t), SHALE_QUEUE_DEPTH, mq_lock);
     device_obj->class_data = shale_malloc(dev_driver->driver_class->data_length);
     device_obj->driver_data = shale_malloc(dev_driver->data_length);
-    strcpy(id, device_obj->name);
+    strcpy(id, device_obj->id);
     device_obj->driver = dev_driver;
-    s_device_register(device_obj);
-    _class_table_lookup(dev_driver->driver_class)->init(device_obj);
-    _driver_table_lookup(dev_driver)->init(device_obj);
+    _device_register(device_obj);
+    dev_driver->driver_class->events.init(device_obj);
+    dev_driver->events.init(device_obj);
     return device_obj;
 }
-uint8_t s_device_register(device_t *device)
+uint8_t _device_register(device_t *device)
 {
     if(device_count >= SHALE_MAX_DEVICES)
         return ERROR_MAX_ENTITIES;

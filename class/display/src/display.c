@@ -30,6 +30,11 @@ Message_Handler(shale_class_display_handle_message)
         handle->reply = reply;
         return MX_DONE;
     
+    case DISPLAY_SET_DIMENSION:
+        display_data_t *data = (display_data_t *)device->class_data;
+        data->dimension = *(dimension_t *)handle->msg.param[0];
+        handle->dest = device->driver;
+        return MX_FORWARD;
     default:
         break;
     }

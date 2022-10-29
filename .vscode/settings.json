@@ -1,8 +1,9 @@
 {
     //"cmake.generator": "NMake Makefiles",
     "cmake.configureSettings": {
-        "PICO_SDK_PATH": "../../pico-sdk",
-        "PICO_BOARD": "waveshare_rp2040_zero"
+        //"PICO_BOARD": "waveshare_rp2040_zero",
+        "PICO_BOARD": "pico",
+        "PICO_SDK_PATH": "../../pico-sdk"
     },
     "C_Cpp.autoAddFileAssociations": false,
     "C_Cpp.loggingLevel": "Information",

@@ -7,6 +7,7 @@
 //      ID string fields in framework objects are currently used only
 //      as labels to aid in debugging.
 #include <pico/platform.h>
+#include <pico/util/queue.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -14,7 +15,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "shale/message.h"
+
 #define shale_malloc malloc
+#define shale_free free
 
 #ifdef SHALE_DEBUG
 #   define assert_class(pclass) \
@@ -96,10 +100,18 @@ typedef struct device_class class_t;
 typedef struct device_driver driver_t;
 typedef struct device device_t;
 typedef struct message message_t;
-typedef struct msg_handle msg_handle_t;
+
+typedef void (*device_init_t)(device_t *);
+typedef uint8_t (*msg_handler_t)(device_t *, msg_handle_t *);
+
+typedef struct handler_block {
+    device_init_t init;
+    msg_handler_t message;
+} handler_block_t;
 
 typedef struct device_class {
     uint8_t id[NAME_LENGTH];
+    handler_block_t events;
     size_t data_length;
     uint8_t driver_count;
     driver_t *drivers[SHALE_CLASS_MAX_DRIVERS];
@@ -109,33 +121,18 @@ typedef struct device_driver {
     uint8_t id[NAME_LENGTH];
 //    const uint8_t class_id[NAME_LENGTH];
     class_t *driver_class;
-    void *driver_api;
+    handler_block_t events;
     size_t data_length;
 } driver_t;
 
 typedef struct device {
-    uint8_t name[NAME_LENGTH];
+    uint8_t id[NAME_LENGTH];
     driver_t *driver;
+    queue_t *queue;
     uint8_t state;
     uint8_t *class_data;
     uint8_t *driver_data;
 } device_t;
-
-typedef struct message {
-    device_t *target;
-    uint8_t msg_id;
-    void *param[];
-} message_t;
-
-typedef struct msg_handle {
-    uint32_t handle_id;
-    uint8_t status;
-    message_t msg;
-    void *reply;
-} msg_handle_t;
-
-typedef void (*device_init_t)(device_t *);
-typedef uint8_t (*msg_handler_t)(device_t *, msg_handle_t *);
 
 #define Message_Handler(name) \
            uint8_t name(device_t *device, msg_handle_t *handle)
@@ -150,31 +147,13 @@ typedef uint8_t (*msg_handler_t)(device_t *, msg_handle_t *);
 #define shale_log(level, format, ...) shale_logv(level, (format), __VA_ARGS__)
 #define shale_logv(level, format, args) vprintf("[##level##]: " format, args)  
 
-// message handler response codes
-#define MX_DONE             0x00
-#define MX_DELEGATE         0x01
-#define MX_FORWARD          0x02
-#define MX_ERROR            0xFF
-
-// message delivery status codes
-#define MXS_QUEUED          0x00
-#define MXS_SENT            0x01
-#define MXS_RECEIVED        0x02
-#define MXS_RESPONDED       0x03
-#define MXS_ERROR           0xFF
-
-#define mx(target, id) mx_p(target, id, NULL)
-#define mx_p(target, id, param) \
-    shale_message_send((message_t){target, id, param})
-
 void shale_init();
-msg_handle_t *shale_message_send(message_t message);
-void shale_message_await(msg_handle_t *handle, uint8_t status);
+void shale_thread_yield();
 
 class_t *shale_class_new(uint8_t *id, size_t data_length,
     device_init_t init, msg_handler_t handler);
-driver_t *shale_driver_new(uint8_t *id, class_t *drv_class,
-    size_t data_length, device_init_t init, msg_handler_t handler);
+driver_t *shale_driver_new(uint8_t *id, class_t *drv_class, size_t data_length,
+    device_init_t init, msg_handler_t handler);
 device_t *shale_device_new(uint8_t *id, driver_t *dev_driver);
 
 #endif
