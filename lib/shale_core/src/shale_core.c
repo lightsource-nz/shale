@@ -13,45 +13,64 @@ extern void const *__shaledata_drivers_end;
 extern void const *__shaledata_devices_start;
 extern void const *__shaledata_devices_end;
 
-static class_t *class_table[SHALE_MAX_CLASSES];
-static driver_t *driver_table[SHALE_MAX_DRIVERS];
-static device_t *device_table[SHALE_MAX_DEVICES];
+device_manager_t *manager_default;
 
-static uint8_t class_count, driver_count, device_count = 0;
-static int mq_lock;
-
-class_t *_class_lookup(uint8_t *id)
+int16_t _list_indexof(void *list[], uint8_t count, void *item)
 {
-    for(int i = 0; i < SHALE_MAX_CLASSES; i++) {
-        if(strcmp(class_table[i]->id, id))
-            return class_table[i];
+    for(uint8_t i = 0; i < count; i++) {
+        if(list[i] == item)
+            return i;
     }
-    return NULL;
+    return -1;
 }
-driver_t *_driver_lookup(uint8_t *id)
+void _list_delete_at_index(void *list[], uint8_t *count, uint8_t index)
 {
-    for(int i = 0; i < SHALE_MAX_DRIVERS; i++) {
-        if(strcmp(driver_table[i]->id, id))
-            return driver_table[i];
+    for(uint8_t i = index; i < *count; i++) {
+        list[i] = list[i + 1];
     }
-    return NULL;
+    *count--;
 }
-device_t *_device_lookup(uint8_t *id)
+void _list_delete_item(void *list[], uint8_t *count, void *item)
+{
+    int16_t index;
+    if((index = _list_indexof(list, *count, item)) >= 0)
+        _list_delete_at_index(list, count, index);
+}
+device_t *_device_lookup(device_manager_t *context, uint8_t *id)
 {
     for(int i = 0; i < SHALE_MAX_DEVICES; i++) {
-        if(strcmp(device_table[i]->id, id))
-            return device_table[i];
+        if(strcmp(context->device_table[i]->id, id))
+            return context->device_table[i];
     }
     return NULL;
 }
 
 void shale_init()
 {
-    if(!mq_lock)
-        mq_lock = spin_lock_claim_unused(true);
+    shale_thread_init();
+    manager_default = shale_device_manager_new(SHALE_MANAGER_DEFAULT_NAME);
     // TODO implement initializer arrays in linker script
     // shale_process_static_classes();
     // shale_process_static_drivers();
+}
+
+void shale_thread_yield()
+{
+    shale_thread_current()->thread_state = SHALE_THREAD_READY;
+    _service_message_queues();
+}
+void shale_service_message_queues()
+{
+    shale_device_manager_service_message_queues(manager_default);
+}
+void shale_device_manager_service_message_queues(device_manager_t *context)
+{
+    
+}
+
+void _service_message_queues()
+{
+
 }
 
 void _dispatch_message_for_device(device_t *device)
@@ -79,75 +98,46 @@ void _dispatch_message_for_device(device_t *device)
     }
 
 }
-class_t *shale_class_new(uint8_t *id, size_t data_length, device_init_t init, msg_handler_t message)
+device_manager_t *shale_device_manager_new(uint8_t *id)
 {
-    class_t *class_obj = shale_malloc(sizeof (class_t));
-    strcpy(class_obj->id, id);
-    class_obj->data_length = data_length;
-    class_obj->events.init = init;
-    class_obj->events.message = message;
-    _class_register(class_obj);
-    return class_obj;
-}
-uint8_t _class_register(class_t *_class)
-{
-    if(class_count >= SHALE_MAX_CLASSES)
-        return ERROR_MAX_ENTITIES;
-    uint8_t id = class_count++;
-    class_table[id] = _class;
-    return SHALE_SUCCESS;
-}
-uint8_t _class_add_driver(class_t *_class, driver_t *driver)
-{
+    device_manager_t *obj = shale_malloc(sizeof(device_manager_t));
+    obj->mq_lock = spin_lock_claim_unused(true);
+    strcpy(id, obj->id);
+    obj->scheduler_strategy = SHALE_MANAGER_STRATEGY_RR;
+    obj->device_count = 0;
 
-}
-driver_t *shale_driver_new(uint8_t *id, class_t *drv_class, size_t data_length,
-    device_init_t init, msg_handler_t message)
-{
-    assert_class(drv_class);
-    driver_t *driver_obj = shale_malloc(sizeof(driver_t));
-    strcpy(driver_obj->id, id);
-    driver_obj->driver_class = drv_class;
-    driver_obj->data_length = data_length;
-    driver_obj->events.init = init;
-    driver_obj->events.message = message;
-    _driver_register(driver_obj);
-    return driver_obj;
-}
-// register driver in global and class-local driver tables
-uint8_t _driver_register(driver_t *driver)
-{
-    if(driver_count >= SHALE_MAX_DRIVERS)
-        return ERROR_MAX_ENTITIES;
-    uint8_t status = _class_add_driver(driver->driver_class, driver);
-    if(status != SHALE_SUCCESS) {
-        return status;
-    }
-    driver_table[driver_count++] = driver;
-    return SHALE_SUCCESS;
+    return obj;
 }
 // allocate device memory, and call class/driver init handlers
 device_t *shale_device_new(uint8_t *id, driver_t *dev_driver)
 {
+    shale_device_manager_device_new(manager_default, id, dev_driver);
+}
+
+// TODO extract hardware-specific queueing code
+device_t *shale_device_manager_device_new(device_manager_t *context, uint8_t *id, driver_t *dev_driver)
+{
     assert_class(dev_driver->driver_class);
     assert_driver(dev_driver);
+    // TODO add assertion to verify manager
     device_t *device_obj = shale_malloc(sizeof(device_t));
     device_obj->queue = shale_malloc(sizeof(queue_t));
-    queue_init_with_spinlock(device_obj->queue,sizeof(msg_handle_t), SHALE_QUEUE_DEPTH, mq_lock);
+    queue_init_with_spinlock(device_obj->queue,sizeof(msg_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
     device_obj->class_data = shale_malloc(dev_driver->driver_class->data_length);
     device_obj->driver_data = shale_malloc(dev_driver->data_length);
     strcpy(id, device_obj->id);
     device_obj->driver = dev_driver;
-    _device_register(device_obj);
+    device_obj->state = SHALE_DEVICE_STATE_INIT;
+    _device_register(context, device_obj);
     dev_driver->driver_class->events.init(device_obj);
     dev_driver->events.init(device_obj);
     return device_obj;
 }
-uint8_t _device_register(device_t *device)
+uint8_t _device_register(device_manager_t *context, device_t *device)
 {
-    if(device_count >= SHALE_MAX_DEVICES)
+    if(context->device_count >= SHALE_MANAGER_MAX_DEVICES)
         return ERROR_MAX_ENTITIES;
-    uint8_t id = device_count++;
-    device_table[id] = device;
+    context->device_table[context->device_count++] = device;
+    device->context = context;
     return SHALE_SUCCESS;
 }

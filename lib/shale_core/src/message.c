@@ -3,9 +3,7 @@
 #include "shale.h"
 #include "shale_internal.h"
 
-static uint8_t thread_state = SHALE_THREAD_ACTIVE;
-static thread_condition_t thread_cond = { NULL, MXS_QUEUED };
-
+// TODO this should be either thread-local or hardware synchronized
 static uint32_t next_msgid = 0;
 
 // TODO function not thread-safe, review access synchronization
@@ -31,7 +29,8 @@ msg_handle_t *shale_message_send(message_t message)
 }
 void shale_message_await(msg_handle_t *handle, uint8_t status)
 {
-    thread_cond = (thread_condition_t) { handle, status };
-    thread_state = SHALE_THREAD_BLOCKED;
+    shale_thread_t *thread = shale_thread_current();
+    thread->thread_cond = (thread_condition_t) { handle, status };
+    thread->thread_state = SHALE_THREAD_BLOCKED;
     // TODO implement yield to message scheduler
 }

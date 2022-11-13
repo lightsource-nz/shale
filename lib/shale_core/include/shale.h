@@ -15,8 +15,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "shale/message.h"
-
 #define shale_malloc malloc
 #define shale_free free
 
@@ -74,18 +72,28 @@
 #   define assert_device_driver(pdevice, driver_id)
 #endif
 
+// rp2040 can run 2 threads, one per core
+// TODO move this to platform-specific config files
+#define SHALE_CPU_HARD_THREAD_COUNT     2
+
 #define NAME_LENGTH                     32
 #define SHALE_CLASS_MAX_DRIVERS         8
 
 #define SHALE_MAX_CLASSES               8
 #define SHALE_MAX_DRIVERS               16
 #define SHALE_MAX_DEVICES               24
+#define SHALE_MAX_THREADS               2
 #define SHALE_QUEUE_DEPTH               8
-#define SHALE_MQ_SPINLOCK               0
 
+#define SHALE_MANAGER_MAX_DEVICES       16
+#define SHALE_MANAGER_DEFAULT_NAME      "devmgr:default"
+
+// function return codes
 #define SHALE_SUCCESS                   0
 #define ERROR_MAX_ENTITIES              UINT8_MAX
 #define ERROR_ENTITY_INVALID            (UINT8_MAX-1)
+
+#define SHALE_MANAGER_STRATEGY_RR       0
 
 #define SHALE_DEVICE_STATE_INIT         0
 #define SHALE_DEVICE_STATE_ACTIVE       1
@@ -96,36 +104,18 @@
 #define Shale_Static_Driver(name) driver_t* __section(".shaledata.drivers") _##name = &name
 #define Shale_Static_Device(name) device_t* __section(".shaledata.devices") _##name = &name
 
+typedef struct device_manager device_manager_t;
 typedef struct device_class class_t;
 typedef struct device_driver driver_t;
 typedef struct device device_t;
 typedef struct message message_t;
 
-typedef void (*device_init_t)(device_t *);
-typedef uint8_t (*msg_handler_t)(device_t *, msg_handle_t *);
-
-typedef struct handler_block {
-    device_init_t init;
-    msg_handler_t message;
-} handler_block_t;
-
-typedef struct device_class {
-    uint8_t id[NAME_LENGTH];
-    handler_block_t events;
-    size_t data_length;
-    uint8_t driver_count;
-    driver_t *drivers[SHALE_CLASS_MAX_DRIVERS];
-} class_t;
-
-typedef struct device_driver {
-    uint8_t id[NAME_LENGTH];
-//    const uint8_t class_id[NAME_LENGTH];
-    class_t *driver_class;
-    handler_block_t events;
-    size_t data_length;
-} driver_t;
+#include "shale/message.h"
+#include "shale/thread.h"
+#include "shale/driver.h"
 
 typedef struct device {
+    device_manager_t *context;
     uint8_t id[NAME_LENGTH];
     driver_t *driver;
     queue_t *queue;
@@ -134,8 +124,15 @@ typedef struct device {
     uint8_t *driver_data;
 } device_t;
 
-#define Message_Handler(name) \
-           uint8_t name(device_t *device, msg_handle_t *handle)
+typedef struct device_manager {
+    uint8_t id[NAME_LENGTH];
+    uint8_t scheduler_strategy;
+    int mq_lock;
+    uint8_t device_count;
+    device_t *device_table[SHALE_MANAGER_MAX_DEVICES];
+} device_manager_t;
+
+#define Message_Handler(name) uint8_t name(device_t *device, msg_handle_t *handle)
 
 #define LOG_TRACE           "TRACE"
 #define LOG_DEBUG           "DEBUG"
@@ -148,12 +145,11 @@ typedef struct device {
 #define shale_logv(level, format, args) vprintf("[##level##]: " format, args)  
 
 void shale_init();
-void shale_thread_yield();
 
-class_t *shale_class_new(uint8_t *id, size_t data_length,
-    device_init_t init, msg_handler_t handler);
-driver_t *shale_driver_new(uint8_t *id, class_t *drv_class, size_t data_length,
-    device_init_t init, msg_handler_t handler);
+device_manager_t *shale_device_manager_new(uint8_t *id);
 device_t *shale_device_new(uint8_t *id, driver_t *dev_driver);
+device_t *shale_device_manager_device_new(device_manager_t *context, uint8_t *id, driver_t *dev_driver);
+void shale_service_message_queues();
+void shale_device_manager_service_message_queues(device_manager_t *context);
 
 #endif

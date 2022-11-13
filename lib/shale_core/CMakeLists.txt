@@ -10,6 +10,8 @@ target_sources(
     shale_core INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/src/shale_core.c
     ${CMAKE_CURRENT_LIST_DIR}/src/message.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/driver.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/thread.c
 )
 
 pico_set_linker_script(shale_core ${CMAKE_CURRENT_LIST_DIR}/memmap_shale.ld)

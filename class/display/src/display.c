@@ -33,7 +33,7 @@ Message_Handler(shale_class_display_handle_message)
     case DISPLAY_SET_DIMENSION:
         display_data_t *data = (display_data_t *)device->class_data;
         data->dimension = *(dimension_t *)handle->msg.param[0];
-        handle->dest = device->driver;
+        handle->dest = device;
         return MX_FORWARD;
     default:
         break;
