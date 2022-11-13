@@ -54,11 +54,6 @@ void shale_init()
     // shale_process_static_drivers();
 }
 
-void shale_thread_yield()
-{
-    shale_thread_current()->thread_state = SHALE_THREAD_READY;
-    _service_message_queues();
-}
 void shale_service_message_queues()
 {
     shale_device_manager_service_message_queues(manager_default);
