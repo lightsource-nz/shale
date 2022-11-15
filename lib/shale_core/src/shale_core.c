@@ -58,11 +58,26 @@ void shale_service_message_queues()
 {
     shale_device_manager_service_message_queues(manager_default);
 }
+void _service_queues_rr(device_manager_t *context);
 void shale_device_manager_service_message_queues(device_manager_t *context)
 {
-    
+    switch(context->scheduler_strategy) {
+    case SHALE_MANAGER_STRATEGY_RR:
+        _service_queues_rr(context);
+    }
 }
 
+void _service_queues_rr(device_manager_t *context)
+{
+    device_t *device;
+    message_t *message;
+    for(int i = 0; i < context->device_count; i++) {
+        device = context->device_table[i];
+        if(queue_try_peek(device->queue, &message)) {
+            
+        }
+    }
+}
 void _service_message_queues()
 {
 
