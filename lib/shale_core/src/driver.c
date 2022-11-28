@@ -7,7 +7,7 @@ static uint8_t class_count, driver_count = 0;
 static class_t *class_table[SHALE_MAX_CLASSES];
 static driver_t *driver_table[SHALE_MAX_DRIVERS];
 
-class_t *shale_class_new(uint8_t *id, size_t data_length, device_init_t init, msg_handler_t message)
+class_t *shale_class_new(uint8_t *id, size_t data_length, device_init_t init, message_handler_t message)
 {
     class_t *class_obj = shale_malloc(sizeof (class_t));
     strcpy(class_obj->id, id);
@@ -34,7 +34,7 @@ uint8_t _class_add_driver(class_t *_class, driver_t *driver)
 
 }
 driver_t *shale_driver_new(uint8_t *id, class_t *drv_class, size_t data_length,
-    device_init_t init, msg_handler_t message)
+    device_init_t init, message_handler_t message)
 {
     assert_class(drv_class);
     driver_t *driver_obj = shale_malloc(sizeof(driver_t));
@@ -63,11 +63,11 @@ uint8_t _driver_register(driver_t *driver)
     return SHALE_SUCCESS;
 }
 
-void shale_class_deliver_message(class_t *target, device_t *device, msg_handle_t *msg)
+void shale_class_deliver_message(class_t *target, device_t *device, message_handle_t *msg)
 {
     target->events.message(device, msg);
 }
-void shale_driver_deliver_message(driver_t *target, device_t *device, msg_handle_t *msg);
+void shale_driver_deliver_message(driver_t *target, device_t *device, message_handle_t *msg);
 
 class_t *_class_lookup(uint8_t *id)
 {

@@ -3,7 +3,7 @@
 
 
 typedef struct thread_condition {
-    msg_handle_t *handle;
+    message_handle_t *handle;
     uint8_t status_awaited;
 } thread_condition_t;
 

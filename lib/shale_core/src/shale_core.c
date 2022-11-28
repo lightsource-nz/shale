@@ -53,28 +53,39 @@ void shale_init()
     // shale_process_static_classes();
     // shale_process_static_drivers();
 }
-
+#define SERVICE_COUNT_INF UINT16_MAX
 void shale_service_message_queues()
 {
-    shale_device_manager_service_message_queues(manager_default);
+    shale_service_message_queues_n(SERVICE_COUNT_INF);
 }
-void _service_queues_rr(device_manager_t *context);
+void shale_service_message_queues_n(uint16_t count)
+{
+    shale_device_manager_service_message_queues_n(manager_default, count);
+}
+void _service_queues_rr(device_manager_t *context, uint16_t count);
 void shale_device_manager_service_message_queues(device_manager_t *context)
+{
+    shale_device_manager_service_message_queues_n(context, SERVICE_COUNT_INF);
+}
+void shale_device_manager_service_message_queues_n(device_manager_t *context, uint16_t count)
 {
     switch(context->scheduler_strategy) {
     case SHALE_MANAGER_STRATEGY_RR:
-        _service_queues_rr(context);
+        _service_queues_rr(context, count);
     }
 }
 
-void _service_queues_rr(device_manager_t *context)
+void _service_queues_rr(device_manager_t *context, uint16_t count)
 {
+    uint16_t dispatch_count = 0;
     device_t *device;
     message_t *message;
     for(int i = 0; i < context->device_count; i++) {
         device = context->device_table[i];
-        if(queue_try_peek(device->queue, &message)) {
-            
+        if(shale_device_message_pending(device)) {
+            _dispatch_message_for_device(device);
+            if(count != SERVICE_COUNT_INF && ++dispatch_count == count)
+                break;
         }
     }
 }
@@ -85,7 +96,7 @@ void _service_message_queues()
 
 void _dispatch_message_for_device(device_t *device)
 {
-    msg_handle_t *handle;
+    message_handle_t *handle;
     while(queue_try_peek(device->queue, &handle)) {
         uint8_t status = device->driver->driver_class->events.message(handle->msg.target, handle);
         switch(status) {
@@ -132,7 +143,7 @@ device_t *shale_device_manager_device_new(device_manager_t *context, uint8_t *id
     // TODO add assertion to verify manager
     device_t *device_obj = shale_malloc(sizeof(device_t));
     device_obj->queue = shale_malloc(sizeof(queue_t));
-    queue_init_with_spinlock(device_obj->queue,sizeof(msg_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
+    queue_init_with_spinlock(device_obj->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
     device_obj->class_data = shale_malloc(dev_driver->driver_class->data_length);
     device_obj->driver_data = shale_malloc(dev_driver->data_length);
     strcpy(id, device_obj->id);
@@ -150,4 +161,14 @@ uint8_t _device_register(device_manager_t *context, device_t *device)
     context->device_table[context->device_count++] = device;
     device->context = context;
     return SHALE_SUCCESS;
+}
+
+bool shale_device_message_pending(device_t *device)
+{
+    message_handle_t *handle;
+    return queue_try_peek(device->queue, &handle);
+}
+message_handle_t *shale_device_message_get_next(device_t *device)
+{
+
 }

@@ -2,11 +2,11 @@
 #define _SHALE_DRIVER_H
 
 typedef void (*device_init_t)(device_t *);
-typedef uint8_t (*msg_handler_t)(device_t *, msg_handle_t *);
+typedef uint8_t (*message_handler_t)(device_t *, message_handle_t *);
 
 typedef struct handler_block {
     device_init_t init;
-    msg_handler_t message;
+    message_handler_t message;
 } handler_block_t;
 
 typedef struct device_class {
@@ -26,10 +26,10 @@ typedef struct device_driver {
 } driver_t;
 
 class_t *shale_class_new(uint8_t *id, size_t data_length,
-    device_init_t init, msg_handler_t handler);
+    device_init_t init, message_handler_t handler);
 driver_t *shale_driver_new(uint8_t *id, class_t *drv_class, size_t data_length,
-    device_init_t init, msg_handler_t handler);
+    device_init_t init, message_handler_t handler);
 
-void shale_class_deliver_message(class_t *target, device_t *device, msg_handle_t *msg);
-void shale_driver_deliver_message(driver_t *target, device_t *device, msg_handle_t *msg);
+void shale_class_deliver_message(class_t *target, device_t *device, message_handle_t *msg);
+void shale_driver_deliver_message(driver_t *target, device_t *device, message_handle_t *msg);
 #endif

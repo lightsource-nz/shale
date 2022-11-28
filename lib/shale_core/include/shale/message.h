@@ -26,16 +26,16 @@ typedef struct message {
     void *param[];
 } message_t;
 
-typedef struct msg_handle {
+typedef struct message_handle {
     uint32_t handle_id;
     uint8_t status;
     device_t *dest;
     message_t msg;
     void *reply;
-} msg_handle_t;
+} message_handle_t;
 
-msg_handle_t *message_handle_new(message_t message);
-msg_handle_t *shale_message_send(message_t message);
-void shale_message_await(msg_handle_t *handle, uint8_t status);
+message_handle_t *message_handle_new(message_t message);
+message_handle_t *shale_message_send(message_t message);
+void shale_message_await(message_handle_t *handle, uint8_t status);
 
 #endif

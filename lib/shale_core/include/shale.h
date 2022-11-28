@@ -132,7 +132,7 @@ typedef struct device_manager {
     device_t *device_table[SHALE_MANAGER_MAX_DEVICES];
 } device_manager_t;
 
-#define Message_Handler(name) uint8_t name(device_t *device, msg_handle_t *handle)
+#define Message_Handler(name) uint8_t name(device_t *device, message_handle_t *handle)
 
 #define LOG_TRACE           "TRACE"
 #define LOG_DEBUG           "DEBUG"
@@ -149,7 +149,12 @@ void shale_init();
 device_manager_t *shale_device_manager_new(uint8_t *id);
 device_t *shale_device_new(uint8_t *id, driver_t *dev_driver);
 device_t *shale_device_manager_device_new(device_manager_t *context, uint8_t *id, driver_t *dev_driver);
+bool shale_device_message_pending(device_t *device);
+message_handle_t *shale_device_message_get_next(device_t *device);
+
 void shale_service_message_queues();
+void shale_service_message_queues_n(uint16_t count);
 void shale_device_manager_service_message_queues(device_manager_t *context);
+void shale_device_manager_service_message_queues_n(device_manager_t *context, uint16_t count);
 
 #endif
