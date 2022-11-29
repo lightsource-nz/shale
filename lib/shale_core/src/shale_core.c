@@ -13,6 +13,8 @@ extern void const *__shaledata_drivers_end;
 extern void const *__shaledata_devices_start;
 extern void const *__shaledata_devices_end;
 
+uint8_t shale_log_buffer[SHALE_LOG_BUFFER_SIZE];
+
 device_manager_t *manager_default;
 
 int16_t _list_indexof(void *list[], uint8_t count, void *item)
@@ -97,7 +99,7 @@ void _service_message_queues()
 void _dispatch_message_for_device(device_t *device)
 {
     message_handle_t *handle;
-    while(queue_try_peek(device->queue, &handle)) {
+    if(queue_try_peek(device->queue, &handle)) {
         uint8_t status = device->driver->driver_class->events.message(handle->msg.target, handle);
         switch(status) {
             case MX_DONE:
@@ -106,14 +108,12 @@ void _dispatch_message_for_device(device_t *device)
             queue_t *next_q = handle->dest->queue;
             if(queue_try_add(next_q, handle)) {
                 if(!queue_try_remove(device->queue, &handle)) {
-                    // TODO log queueing error
-
+                    shale_fatal("queueing error condition 000 on device %s, message ID %x", device->id, handle->msg.msg_id);
                 }
             }
-            else
-            {
-                // TODO log overflow condition
-            }
+            break;
+            case MX_DELEGATE:
+            // TODO need a sensible way to allow class handlers to chain to driver specific handler
             break;
         }
     }
