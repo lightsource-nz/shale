@@ -114,6 +114,11 @@ typedef struct message message_t;
 #include "shale/thread.h"
 #include "shale/driver.h"
 
+extern struct lobj_type ltype_device_instance;
+
+#define LTYPE_DEVICE_INSTANCE_NAME "device_instance"
+#define to_device_instance(object) container_of(object, device_t, header)
+
 typedef struct device {
     device_manager_t *context;
     uint8_t id[NAME_LENGTH];

@@ -2,6 +2,10 @@
 #define _SHALE_THREAD_H
 
 
+extern struct lobj_type ltype_thread;
+#define LTYPE_THREAD_NAME "thread"
+#define to_thread(object) container_of(object, shale_thread_t, header)
+
 typedef struct thread_condition {
     message_handle_t *handle;
     uint8_t status_awaited;

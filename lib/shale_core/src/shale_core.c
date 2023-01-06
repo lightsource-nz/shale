@@ -13,6 +13,10 @@ extern void const *__shaledata_drivers_end;
 extern void const *__shaledata_devices_start;
 extern void const *__shaledata_devices_end;
 
+struct lobj_type ltype_device_instance = {
+        .release = &_device_instance_release
+};
+
 uint8_t shale_log_buffer[SHALE_LOG_BUFFER_SIZE];
 
 device_manager_t *manager_default;

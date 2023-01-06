@@ -3,6 +3,9 @@
 #include "shale.h"
 #include "shale_internal.h"
 
+struct lobj_type ltype_thread = {
+        .release = &_thread_release
+};
 static shale_thread_t *thread_table[SHALE_MAX_THREADS];
 static uint8_t thread_count;
 static shale_thread_t *thread_active[SHALE_CPU_HARD_THREAD_COUNT];
