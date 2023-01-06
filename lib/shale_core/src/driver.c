@@ -3,6 +3,9 @@
 #include "shale.h"
 #include "shale_internal.h"
 
+static void _device_class_release(struct light_object *obj);
+static void _device_driver_release(struct light_object *obj);
+
 struct lobj_type ltype_device_class = {
         .release = &_device_class_release
 };
@@ -13,6 +16,15 @@ struct lobj_type ltype_device_driver = {
 static uint8_t class_count, driver_count = 0;
 static class_t *class_table[SHALE_MAX_CLASSES];
 static driver_t *driver_table[SHALE_MAX_DRIVERS];
+
+static void _device_class_release(struct light_object *obj)
+{
+    free(to_device_class(obj));
+}
+static void _device_driver_release(struct light_object *obj)
+{
+    free(to_device_driver(obj));
+}
 
 class_t *shale_class_new(uint8_t *id, size_t data_length, device_init_t init, message_handler_t message)
 {

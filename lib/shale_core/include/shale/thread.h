@@ -1,6 +1,7 @@
 #ifndef _SHALE_THREAD_H
 #define _SHALE_THREAD_H
 
+#include <light_object.h>
 
 extern struct lobj_type ltype_thread;
 #define LTYPE_THREAD_NAME "thread"
@@ -12,6 +13,7 @@ typedef struct thread_condition {
 } thread_condition_t;
 
 typedef struct shale_thread {
+    struct light_object header;
     uint8_t thread_state;
     uint8_t running_on;
     thread_condition_t thread_cond;

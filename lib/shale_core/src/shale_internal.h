@@ -19,11 +19,6 @@
 int16_t _list_indexof(void *list[], uint8_t count, void *item);
 void _list_delete_at_index(void *list[], uint8_t *count, uint8_t index);
 void _list_delete_item(void *list[], uint8_t *count, void *item);
-  
-void _device_class_release(struct light_object *obj);
-void _device_driver_release(struct light_object *obj);
-void _device_instance_release(struct light_object *obj);
-void _thread_release(struct light_object *obj);
 
 uint8_t _class_register(class_t *_class);
 uint8_t _driver_register(driver_t *driver);

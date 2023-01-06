@@ -13,6 +13,8 @@ extern void const *__shaledata_drivers_end;
 extern void const *__shaledata_devices_start;
 extern void const *__shaledata_devices_end;
 
+static void _device_instance_release(struct light_object *obj);
+
 struct lobj_type ltype_device_instance = {
         .release = &_device_instance_release
 };
@@ -49,6 +51,10 @@ device_t *_device_lookup(device_manager_t *context, uint8_t *id)
             return context->device_table[i];
     }
     return NULL;
+}
+static void _device_instance_release(struct light_object *obj)
+{
+    free(to_device_instance(obj));
 }
 
 void shale_init()

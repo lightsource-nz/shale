@@ -34,8 +34,8 @@ extern struct lobj_type ltype_device_driver;
 #define LTYPE_DEVICE_CLASS_NAME "device_class"
 #define LTYPE_DEVICE_DRIVER_NAME "device_driver"
 
-#define to_device_class(object) container_of(object, &ltype_device_class, header)
-#define to_device_driver(object) container_of(object, &ltype_device_driver, header)
+#define to_device_class(object) container_of(object, class_t, header)
+#define to_device_driver(object) container_of(object, driver_t, header)
 
 class_t *shale_class_new(uint8_t *id, size_t data_length,
     device_init_t init, message_handler_t handler);

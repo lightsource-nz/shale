@@ -3,6 +3,8 @@
 #include "shale.h"
 #include "shale_internal.h"
 
+static void _thread_release(struct light_object *obj);
+
 struct lobj_type ltype_thread = {
         .release = &_thread_release
 };
@@ -14,6 +16,10 @@ static uint8_t thread_waiting_count;
 
 uint8_t shale_port_rp2040_hart_id_current();
 
+static void _thread_release(struct light_object *obj)
+{
+    free(to_thread(obj));
+}
 uint8_t _thread_register(shale_thread_t *thread)
 {
     if(!thread_count < SHALE_MAX_THREADS)

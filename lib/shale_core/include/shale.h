@@ -120,6 +120,7 @@ extern struct lobj_type ltype_device_instance;
 #define to_device_instance(object) container_of(object, device_t, header)
 
 typedef struct device {
+    struct light_object header;
     device_manager_t *context;
     uint8_t id[NAME_LENGTH];
     driver_t *driver;
