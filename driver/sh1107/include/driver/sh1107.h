@@ -13,7 +13,7 @@ typedef struct sh1107_data {
 } sh1107_data_t;
 
 typedef struct sh1107_device {
-    uint8_t name[NAME_LENGTH];
+    struct light_object header;
     class_t *dev_class;
     driver_t *driver;
     display_data_t *class_data;

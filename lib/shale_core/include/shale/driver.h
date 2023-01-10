@@ -13,7 +13,6 @@ typedef struct handler_block {
 
 typedef struct device_class {
     struct light_object header;
-    uint8_t id[NAME_LENGTH];
     handler_block_t events;
     size_t data_length;
     uint8_t driver_count;
@@ -21,7 +20,6 @@ typedef struct device_class {
 } class_t;
 typedef struct device_driver {
     struct light_object header;
-    uint8_t id[NAME_LENGTH];
 //    const uint8_t class_id[NAME_LENGTH];
     class_t *driver_class;
     handler_block_t events;

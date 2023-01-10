@@ -19,6 +19,12 @@ struct lobj_type ltype_device_instance = {
         .release = &_device_instance_release
 };
 
+static void _device_manager_release(struct light_object *obj);
+
+struct lobj_type ltype_device_manager = {
+        .release = &_device_manager_release
+};
+
 uint8_t shale_log_buffer[SHALE_LOG_BUFFER_SIZE];
 
 device_manager_t *manager_default;
@@ -47,7 +53,7 @@ void _list_delete_item(void *list[], uint8_t *count, void *item)
 device_t *_device_lookup(device_manager_t *context, uint8_t *id)
 {
     for(int i = 0; i < SHALE_MAX_DEVICES; i++) {
-        if(strcmp(context->device_table[i]->id, id))
+        if(strcmp(light_object_get_name(&context->device_table[i]->header), id))
             return context->device_table[i];
     }
     return NULL;
@@ -55,6 +61,10 @@ device_t *_device_lookup(device_manager_t *context, uint8_t *id)
 static void _device_instance_release(struct light_object *obj)
 {
     free(to_device_instance(obj));
+}
+static void _device_manager_release(struct light_object *obj)
+{
+    free(to_device_manager(obj));
 }
 
 void shale_init()
@@ -118,7 +128,7 @@ void _dispatch_message_for_device(device_t *device)
             queue_t *next_q = handle->dest->queue;
             if(queue_try_add(next_q, handle)) {
                 if(!queue_try_remove(device->queue, &handle)) {
-                    shale_fatal("queueing error condition 000 on device %s, message ID %x", device->id, handle->msg.msg_id);
+                    shale_fatal("queueing error condition 000 on device %s, message ID %x", light_object_get_name(&device->header), handle->msg.msg_id);
                 }
             }
             break;
@@ -132,8 +142,8 @@ void _dispatch_message_for_device(device_t *device)
 device_manager_t *shale_device_manager_new(uint8_t *id)
 {
     device_manager_t *obj = shale_malloc(sizeof(device_manager_t));
+    light_object_init(&obj->header, &ltype_device_manager);
     obj->mq_lock = spin_lock_claim_unused(true);
-    strcpy(id, obj->id);
     obj->scheduler_strategy = SHALE_MANAGER_STRATEGY_RR;
     obj->device_count = 0;
 
@@ -152,22 +162,26 @@ device_t *shale_device_manager_device_new(device_manager_t *context, uint8_t *id
     assert_driver(dev_driver);
     // TODO add assertion to verify manager
     device_t *device_obj = shale_malloc(sizeof(device_t));
+    light_object_init(&device_obj->header, &ltype_device_instance);
     device_obj->queue = shale_malloc(sizeof(queue_t));
     queue_init_with_spinlock(device_obj->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
     device_obj->class_data = shale_malloc(dev_driver->driver_class->data_length);
     device_obj->driver_data = shale_malloc(dev_driver->data_length);
-    strcpy(id, device_obj->id);
-    device_obj->driver = dev_driver;
+    device_obj->driver = to_device_driver(light_object_get(&dev_driver->header));
     device_obj->state = SHALE_DEVICE_STATE_INIT;
-    _device_register(context, device_obj);
+    _device_register(context, device_obj, id);
     dev_driver->driver_class->events.init(device_obj);
     dev_driver->events.init(device_obj);
     return device_obj;
 }
-uint8_t _device_register(device_manager_t *context, device_t *device)
+uint8_t _device_register(device_manager_t *context, device_t *device, const uint8_t *id)
 {
     if(context->device_count >= SHALE_MANAGER_MAX_DEVICES)
         return ERROR_MAX_ENTITIES;
+    // TODO verify that device id is unique for this DM
+    int retval;
+    if(!(retval = light_object_add(&device->header, &context->header, "%s", id)))
+        return retval;
     context->device_table[context->device_count++] = device;
     device->context = context;
     return SHALE_SUCCESS;

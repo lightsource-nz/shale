@@ -15,6 +15,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <light_object.h>
+
 #define shale_malloc malloc
 #define shale_free free
 
@@ -76,11 +78,8 @@
 // TODO move this to platform-specific config files
 #define SHALE_CPU_HARD_THREAD_COUNT     2
 
-#define NAME_LENGTH                     32
-#define SHALE_CLASS_MAX_DRIVERS         8
-
 #define SHALE_MAX_CLASSES               8
-#define SHALE_MAX_DRIVERS               16
+#define SHALE_CLASS_MAX_DRIVERS         8
 #define SHALE_MAX_DEVICES               24
 #define SHALE_MAX_THREADS               2
 #define SHALE_QUEUE_DEPTH               8
@@ -122,7 +121,6 @@ extern struct lobj_type ltype_device_instance;
 typedef struct device {
     struct light_object header;
     device_manager_t *context;
-    uint8_t id[NAME_LENGTH];
     driver_t *driver;
     queue_t *queue;
     uint8_t state;
@@ -130,8 +128,13 @@ typedef struct device {
     uint8_t *driver_data;
 } device_t;
 
+extern struct lobj_type ltype_device_manager;
+
+#define LTYPE_DEVICE_MANAGER_NAME "device_manager"
+#define to_device_manager(object) container_of(object, device_manager_t, header)
+
 typedef struct device_manager {
-    uint8_t id[NAME_LENGTH];
+    struct light_object header;
     uint8_t scheduler_strategy;
     int mq_lock;
     uint8_t device_count;

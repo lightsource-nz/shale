@@ -20,9 +20,9 @@ int16_t _list_indexof(void *list[], uint8_t count, void *item);
 void _list_delete_at_index(void *list[], uint8_t *count, uint8_t index);
 void _list_delete_item(void *list[], uint8_t *count, void *item);
 
-uint8_t _class_register(class_t *_class);
-uint8_t _driver_register(driver_t *driver);
-uint8_t _device_register(device_manager_t *context, device_t *device);
+uint8_t _class_register(class_t *_class, const uint8_t *id);
+uint8_t _driver_register(driver_t *driver, const uint8_t *id);
+uint8_t _device_register(device_manager_t *context, device_t *device, const uint8_t *id);
 uint8_t _thread_register(shale_thread_t *thread);
 
 class_t *_class_table_lookup(uint8_t *id);

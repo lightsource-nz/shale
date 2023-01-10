@@ -51,8 +51,7 @@ typedef struct display_api {
 } display_api_t;
 
 typedef struct display_driver {
-    const uint8_t id[NAME_LENGTH];
-    const uint8_t class_id[NAME_LENGTH];
+    struct light_object header;
     const display_api_t *driver_api;
     const uint8_t data_length;
 } display_driver_t;
@@ -67,7 +66,8 @@ typedef struct display_data {
 } display_data_t;
 
 typedef struct display_device {
-    uint8_t name[NAME_LENGTH];
+    struct light_object header;
+    device_manager_t *context;
     class_t *dev_class;             // should always be class_display
     display_driver_t *driver;
     display_data_t *class_data;
