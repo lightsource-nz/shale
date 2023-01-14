@@ -25,8 +25,6 @@ struct lobj_type ltype_device_manager = {
         .release = &_device_manager_release
 };
 
-uint8_t shale_log_buffer[SHALE_LOG_BUFFER_SIZE];
-
 device_manager_t *manager_default;
 
 int16_t _list_indexof(void *list[], uint8_t count, void *item)
@@ -128,7 +126,7 @@ void _dispatch_message_for_device(device_t *device)
             queue_t *next_q = handle->dest->queue;
             if(queue_try_add(next_q, handle)) {
                 if(!queue_try_remove(device->queue, &handle)) {
-                    shale_fatal("queueing error condition 000 on device %s, message ID %x", light_object_get_name(&device->header), handle->msg.msg_id);
+                    light_fatal("queueing error condition 000 on device %s, message ID %x", light_object_get_name(&device->header), handle->msg.msg_id);
                 }
             }
             break;

@@ -143,29 +143,6 @@ typedef struct device_manager {
 
 #define Message_Handler(name) uint8_t name(device_t *device, message_handle_t *handle)
 
-#define LOG_TRACE "TRACE"
-#define LOG_DEBUG "DEBUG"
-#define LOG_INFO "INFO"
-#define LOG_WARN "WARN"
-#define LOG_ERROR "ERROR"
-
-#define SHALE_LOG_BUFFER_SIZE 128
-extern uint8_t shale_log_buffer[SHALE_LOG_BUFFER_SIZE];
-
-#define shale_trace(format, ...) shale_log((format), LOG_TRACE, __VA_ARGS__)
-#define shale_debug(format, ...) shale_log((format), LOG_DEBUG, __VA_ARGS__)
-#define shale_info(format, ...) shale_log((format), LOG_INFO, __VA_ARGS__)
-#define shale_warn(format, ...) shale_log((format), LOG_WARN, __VA_ARGS__)
-#define shale_error(format, ...) shale_log((format), LOG_ERROR, __VA_ARGS__)
-#define shale_fatal(format, ...) \
-    do { shale_error(format, __VA_ARGS__); panic(format, __VA_ARGS__); } while(0)
-
-#define shale_log(format, ...) \
-    do { \
-        snprintf(shale_log_buffer, SHALE_LOG_BUFFER_SIZE, "[%s]: ##format##" , __VA_ARGS__); \
-        printf(shale_log_buffer); \
-    } while (0)
-
 void shale_init();
 
 device_manager_t *shale_device_manager_new(uint8_t *id);

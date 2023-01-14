@@ -1,3 +1,6 @@
 [submodule "lib/light_object"]
 	path = lib/light_object
 	url = git@github.com:lightsource-nz/light_object.git
+[submodule "lib/light_util"]
+	path = lib/light_util
+	url = git@github.com:lightsource-nz/light_util.git

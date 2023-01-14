@@ -9,6 +9,7 @@ pico_sdk_init()
 add_subdirectory(lib/shale_core)
 add_subdirectory(lib/oled_common)
 add_subdirectory(lib/light_object)
+add_subdirectory(lib/light_util)
 
 # classes
 add_subdirectory(class/display)

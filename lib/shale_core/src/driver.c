@@ -55,27 +55,32 @@ uint8_t _class_add_driver(class_t *_class, driver_t *driver, const uint8_t *id)
 {
     if(_class->driver_count >= SHALE_CLASS_MAX_DRIVERS)
         return ERROR_MAX_ENTITIES;
-    
-    return (uint8_t) light_object_add(&_class->header, &driver->header, "%s", id);
+    uint8_t status;
+    if(status = light_object_add(&_class->header, &driver->header, "%s", id)) {
+        // TODO log object system error
+        return status;
+    }
+    _class->drivers[_class->driver_count++] = driver;
+    return SHALE_SUCCESS;
 }
 driver_t *shale_driver_new(uint8_t *id, class_t *drv_class, size_t data_length,
     device_init_t init, message_handler_t message)
 {
     assert_class(drv_class);
     driver_t *driver_obj = shale_malloc(sizeof(driver_t));
-    strcpy(driver_obj->id, id);
     driver_obj->driver_class = drv_class;
     driver_obj->data_length = data_length;
     driver_obj->events.init = init;
     driver_obj->events.message = message;
-    uint8_t status = _driver_register(driver_obj);
+    uint8_t status = _driver_register(driver_obj, id);
     if(status) {
+        shale_free(driver_obj);
         //TODO log error
         return NULL;
     }
     return driver_obj;
 }
-// register driver in global and class driver tables
+// register driver in class driver table
 uint8_t _driver_register(driver_t *driver, const uint8_t *id)
 {
     return _class_add_driver(driver->driver_class, driver, id);
@@ -89,17 +94,22 @@ void shale_driver_deliver_message(driver_t *target, device_t *device, message_ha
 
 class_t *_class_lookup(uint8_t *id)
 {
-    for(int i = 0; i < SHALE_MAX_CLASSES; i++) {
-        if(strcmp(class_table[i]->id, id))
-            return class_table[i];
+    for(int i = 0; i < class_table_global.count; i++) {
+        class_t *class_i = class_table_global.classes[i];
+        if(strcmp(light_object_get_name(&class_i->header), id))
+            return class_i;
     }
     return NULL;
 }
 driver_t *_driver_lookup(uint8_t *id)
 {
-    for(int i = 0; i < SHALE_MAX_DRIVERS; i++) {
-        if(strcmp(driver_table[i]->id, id))
-            return driver_table[i];
+    for(int i = 0; i < class_table_global.count; i++) {
+        class_t *class_i = class_table_global.classes[i];
+        for(uint8_t j = 0; j < class_i->driver_count; j++){
+            driver_t *driver_j = class_i->drivers[j];
+            if(strcmp(light_object_get_name(&driver_j->header), id))
+                return driver_j;
+        }
     }
     return NULL;
 }
