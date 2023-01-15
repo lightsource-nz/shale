@@ -67,6 +67,7 @@ static void _device_manager_release(struct light_object *obj)
 
 void shale_init()
 {
+    light_object_setup();
     shale_thread_init();
     manager_default = shale_device_manager_new(SHALE_MANAGER_DEFAULT_NAME);
     // TODO implement initializer arrays in linker script
@@ -144,6 +145,8 @@ device_manager_t *shale_device_manager_new(uint8_t *id)
     obj->mq_lock = spin_lock_claim_unused(true);
     obj->scheduler_strategy = SHALE_MANAGER_STRATEGY_RR;
     obj->device_count = 0;
+
+    light_object_add(&obj->header, NULL, "%s", id);
 
     return obj;
 }

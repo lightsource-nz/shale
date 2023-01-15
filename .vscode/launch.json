@@ -25,6 +25,7 @@
             "name": "host-mode",
             "type": "cppdbg",
             "request": "launch",
+            "cwd": "${workspaceRoot}/build",
             "program": "${command:cmake.launchTargetPath}"
         }
     ]
