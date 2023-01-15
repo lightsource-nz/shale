@@ -6,14 +6,15 @@
 //      later, or removed permanently.
 //      ID string fields in framework objects are currently used only
 //      as labels to aid in debugging.
-#include <pico/platform.h>
-#include <pico/util/queue.h>
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+#include <pico/platform.h>
+#include <pico/util/queue.h>
 
 #include <light_object.h>
 

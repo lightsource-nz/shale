@@ -24,13 +24,13 @@ Message_Handler(shale_class_display_handle_message)
     display_device_t *disp = (display_device_t *)device;
     switch (handle->msg.msg_id)
     {
-    case DISPLAY_GET_DIMENSION:
+    case DISPLAY_GET_DIMENSION: ;
         dimension_t *reply = shale_malloc(sizeof(dimension_t));
         *reply = disp->class_data->dimension;
         handle->reply = reply;
         return MX_DONE;
     
-    case DISPLAY_SET_DIMENSION:
+    case DISPLAY_SET_DIMENSION: ;
         display_data_t *data = (display_data_t *)device->class_data;
         data->dimension = *(dimension_t *)handle->msg.param[0];
         handle->dest = device;

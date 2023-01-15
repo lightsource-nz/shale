@@ -122,7 +122,7 @@ void _dispatch_message_for_device(device_t *device)
         switch(status) {
             case MX_DONE:
             break;
-            case MX_FORWARD:
+            case MX_FORWARD: ;
             queue_t *next_q = handle->dest->queue;
             if(queue_try_add(next_q, handle)) {
                 if(!queue_try_remove(device->queue, &handle)) {
