@@ -19,7 +19,7 @@ void shale_class_display_init_device(device_t *device)
 //  or delegate handling to the driver level
 Message_Handler(shale_class_display_handle_message)
 {
-    assert_device_class(message.target, CLASS_ID_DISPLAY);
+    assert_device_class(device, CLASS_ID_DISPLAY);
 
     display_device_t *disp = (display_device_t *)device;
     switch (handle->msg.msg_id)
