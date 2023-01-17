@@ -9,4 +9,9 @@
     "C_Cpp.loggingLevel": "Information",
     //"cortex-debug.armToolchainPath": "D:/workspaces/embedded/tools/arm-gcc/11.2/bin"
     //"cortex-debug.openocdPath": "D:/workspaces/embedded/tools/openocd/bin/openocd.exe"
+    "cmake.statusbar.advanced": {
+        "debug": { "visibility": "hidden" },
+        "launch": { "visibility": "hidden" },
+        "launchTarget": { "visibility": "hidden" }
+    }
 }
