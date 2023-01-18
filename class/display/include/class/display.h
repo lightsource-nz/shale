@@ -54,7 +54,7 @@ typedef struct display_driver {
     driver_t header;
     display_api_t *api;
 } display_driver_t;
-#define to_display_driver(ptr) container_of(ptr, driver_t, header)
+#define to_display_driver(ptr) container_of(ptr, display_driver_t, header)
 
 typedef struct display_device {
     device_t header;
@@ -65,10 +65,11 @@ typedef struct display_device {
     uint8_t framerate_hz;
     uint8_t *buffer_start;
 } display_device_t;
-#define to_display_device(ptr) container_of(ptr, device_t, header)
+#define to_display_device(ptr) container_of(ptr, display_device_t, header)
 
 class_t *shale_class_display();
-void shale_class_display_init();
+uint8_t shale_class_display_init();
+uint8_t shale_class_display_device_init(display_device_t *device, display_driver_t *driver, const uint8_t *id);
 
 dimension_t shale_display_dimension_get(display_device_t *dev);
 uint8_t shale_display_channels_get(display_device_t *dev);

@@ -3,11 +3,9 @@
 
 #include <light_object.h>
 
-typedef void (*device_init_t)(device_t *);
 typedef uint8_t (*message_handler_t)(device_t *, message_handle_t *);
 
 typedef struct handler_block {
-    device_init_t init;
     message_handler_t message;
 } handler_block_t;
 
@@ -23,19 +21,16 @@ typedef struct device_driver {
     handler_block_t events;
 } driver_t;
 
-// fairly sure these are redundant
-//extern struct lobj_type ltype_device_class;
-//extern struct lobj_type ltype_device_driver;
-//#define LTYPE_DEVICE_CLASS_NAME "device_class"
-//#define LTYPE_DEVICE_DRIVER_NAME "device_driver"
+extern struct lobj_type ltype_device_class;
+extern struct lobj_type ltype_device_driver;
+#define LTYPE_DEVICE_CLASS_NAME "device_class"
+#define LTYPE_DEVICE_DRIVER_NAME "device_driver"
 
 #define to_device_class(object) container_of(object, class_t, header)
 #define to_device_driver(object) container_of(object, driver_t, header)
 
-uint8_t shale_class_init(class_t *_class, lobj_type *type, uint8_t *id,
-    device_init_t init, message_handler_t handler);
-driver_t *shale_driver_init(class_t *_class, lobj_type *type, uint8_t *id, class_t *drv_class,
-    device_init_t init, message_handler_t handler);
+uint8_t shale_class_init(class_t *_class, const uint8_t *id, message_handler_t handler);
+uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id, message_handler_t handler);
 
 static inline class_t *shale_class_get(class_t *_class)
 {

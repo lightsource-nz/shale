@@ -13,9 +13,7 @@ void main()
     shale_class_display_init();
     shale_driver_sh1107_init();
 
-    class_t *class_display = shale_class_display();
-    driver_t *driver_sh1107 = shale_driver_sh1107();
-
-    sh1107_device_t *display_main = (sh1107_device_t *)shale_device_new(ID_DISPLAY_MAIN, driver_sh1107);
+    sh1107_device_t display_main;
+    uint8_t status = shale_driver_sh1107_device_init(&display_main, ID_DISPLAY_MAIN);
     __breakpoint();
 }

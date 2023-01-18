@@ -28,20 +28,16 @@ static void _device_driver_release(struct light_object *obj)
     free(to_device_driver(obj));
 }
 
-class_t *shale_class_new(uint8_t *id, size_t data_length, device_init_t init, message_handler_t message)
+uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, message_handler_t message)
 {
-    class_t *class_obj = shale_malloc(sizeof (class_t));
     light_object_init(&class_obj->header, &ltype_device_class);
-    //light_object_set_name(&class_obj->header, "class:%s", id);
-    class_obj->data_length = data_length;
-    class_obj->events.init = init;
     class_obj->events.message = message;
     uint8_t status = _class_register(class_obj, id);
     if(status) {
         //TODO log error
-        return NULL;
+        return status;
     }
-    return class_obj;
+    return LIGHT_OK;
 }
 uint8_t _class_register(class_t *_class, const uint8_t *id)
 {
@@ -56,29 +52,26 @@ uint8_t _class_add_driver(class_t *_class, driver_t *driver, const uint8_t *id)
     if(_class->driver_count >= SHALE_CLASS_MAX_DRIVERS)
         return ERROR_MAX_ENTITIES;
     uint8_t status;
-    if(status = light_object_add(&_class->header, &driver->header, "%s", id)) {
+    if(status = light_object_add(&driver->header, &_class->header, "%s", id)) {
         // TODO log object system error
         return status;
     }
     _class->drivers[_class->driver_count++] = driver;
     return SHALE_SUCCESS;
 }
-driver_t *shale_driver_new(uint8_t *id, class_t *drv_class, size_t data_length,
-    device_init_t init, message_handler_t message)
+uint8_t shale_driver_init(driver_t *driver_obj, class_t *drv_class,
+                          const uint8_t *id, message_handler_t message)
 {
     assert_class(drv_class);
-    driver_t *driver_obj = shale_malloc(sizeof(driver_t));
-    driver_obj->driver_class = drv_class;
-    driver_obj->data_length = data_length;
-    driver_obj->events.init = init;
+    driver_obj->driver_class = shale_class_get(drv_class);
     driver_obj->events.message = message;
     uint8_t status = _driver_register(driver_obj, id);
     if(status) {
-        shale_free(driver_obj);
         //TODO log error
-        return NULL;
+        shale_class_put(drv_class);
+        return status;
     }
-    return driver_obj;
+    return LIGHT_OK;
 }
 // register driver in class driver table
 uint8_t _driver_register(driver_t *driver, const uint8_t *id)

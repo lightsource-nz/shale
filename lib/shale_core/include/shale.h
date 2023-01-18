@@ -141,11 +141,11 @@ typedef struct device_manager {
 
 #define Message_Handler(name) uint8_t name(device_t *device, message_handle_t *handle)
 
-void shale_init();
+uint8_t shale_init();
 
-device_manager_t *shale_device_manager_new(uint8_t *id);
-uint8_t shale_device_init(device_t *dev, uint8_t *id, driver_t *dev_driver);
-uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, uint8_t *id, driver_t *dev_driver);
+uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id);
+uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, const uint8_t *id);
+uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t *dev_driver, const uint8_t *id);
 bool shale_device_message_pending(device_t *device);
 message_handle_t *shale_device_message_get_next(device_t *device);
 

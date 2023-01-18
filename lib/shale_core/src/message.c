@@ -24,7 +24,7 @@ void message_handle_destroy(message_handle_t *handle)
 message_handle_t *shale_message_send(message_t message)
 {
     message_handle_t *handle = message_handle_new(message);
-    queue_add_blocking(message.target->queue, handle);
+    queue_add_blocking(&message.target->queue, handle);
     return handle;
 }
 void shale_message_await(message_handle_t *handle, uint8_t status)
