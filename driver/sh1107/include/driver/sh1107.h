@@ -8,20 +8,14 @@
 
 #define DRIVER_ID_SH1107        "shale:driver:sh1107"
 
-typedef struct sh1107_data {
-    ioport_t *port;
-} sh1107_data_t;
-
 typedef struct sh1107_device {
-    struct light_object header;
-    class_t *dev_class;
-    driver_t *driver;
-    display_data_t *class_data;
-    sh1107_data_t *driver_data;
+    display_device_t header;
+    ioport_t port;
 } sh1107_device_t;
+#define to_sh1107_device(ptr) container_of(ptr, sh1107_device_t, header)
 
-void shale_driver_sh1107_init();
-driver_t *shale_driver_sh1107();
-void shale_driver_sh1107_init_device(device_t *device);
+uint8_t shale_driver_sh1107_init();
+display_driver_t *shale_driver_sh1107();
+uint8_t shale_driver_sh1107_device_init(sh1107_device_t *device, const uint8_t *id);
 
 #endif

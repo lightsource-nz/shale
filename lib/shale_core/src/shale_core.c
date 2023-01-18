@@ -14,18 +14,17 @@ extern void const *__shaledata_devices_start;
 extern void const *__shaledata_devices_end;
 
 static void _device_instance_release(struct light_object *obj);
-
 struct lobj_type ltype_device_instance = {
         .release = &_device_instance_release
 };
-
 static void _device_manager_release(struct light_object *obj);
-
 struct lobj_type ltype_device_manager = {
         .release = &_device_manager_release
 };
 
-device_manager_t *manager_default;
+device_manager_t manager_default;
+
+
 
 int16_t _list_indexof(void *list[], uint8_t count, void *item)
 {
@@ -65,14 +64,20 @@ static void _device_manager_release(struct light_object *obj)
     free(to_device_manager(obj));
 }
 
-void shale_init()
+uint8_t shale_init()
 {
+    uint8_t retval;
     light_object_setup();
     shale_thread_init();
-    manager_default = shale_device_manager_new(SHALE_MANAGER_DEFAULT_NAME);
+    if(retval = shale_device_manager_init(&manager_default, SHALE_MANAGER_DEFAULT_NAME)) {
+        // TODO log error
+        return retval;
+    }
+
     // TODO implement initializer arrays in linker script
     // shale_process_static_classes();
     // shale_process_static_drivers();
+    return LIGHT_OK;
 }
 #define SERVICE_COUNT_INF UINT16_MAX
 void shale_service_message_queues()
@@ -81,7 +86,7 @@ void shale_service_message_queues()
 }
 void shale_service_message_queues_n(uint16_t count)
 {
-    shale_device_manager_service_message_queues_n(manager_default, count);
+    shale_device_manager_service_message_queues_n(&manager_default, count);
 }
 void _service_queues_rr(device_manager_t *context, uint16_t count);
 void shale_device_manager_service_message_queues(device_manager_t *context)
@@ -118,15 +123,15 @@ void _service_message_queues()
 void _dispatch_message_for_device(device_t *device)
 {
     message_handle_t *handle;
-    if(queue_try_peek(device->queue, &handle)) {
+    if(queue_try_peek(&device->queue, &handle)) {
         uint8_t status = device->driver->driver_class->events.message(handle->msg.target, handle);
         switch(status) {
             case MX_DONE:
             break;
             case MX_FORWARD: ;
-            queue_t *next_q = handle->dest->queue;
+            queue_t *next_q = &handle->dest->queue;
             if(queue_try_add(next_q, handle)) {
-                if(!queue_try_remove(device->queue, &handle)) {
+                if(!queue_try_remove(&device->queue, &handle)) {
                     light_fatal("queueing error condition 000 on device %s, message ID %x", light_object_get_name(&device->header), handle->msg.msg_id);
                 }
             }
@@ -138,42 +143,41 @@ void _dispatch_message_for_device(device_t *device)
     }
 
 }
-device_manager_t *shale_device_manager_new(uint8_t *id)
+uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id)
 {
-    device_manager_t *obj = shale_malloc(sizeof(device_manager_t));
-    light_object_init(&obj->header, &ltype_device_manager);
-    obj->mq_lock = spin_lock_claim_unused(true);
-    obj->scheduler_strategy = SHALE_MANAGER_STRATEGY_RR;
-    obj->device_count = 0;
+    light_object_init(&devmgr->header, &ltype_device_manager);
+    devmgr->mq_lock = spin_lock_claim_unused(true);
+    devmgr->scheduler_strategy = SHALE_MANAGER_STRATEGY_RR;
+    devmgr->device_count = 0;
 
-    light_object_add(&obj->header, NULL, "%s", id);
+    uint8_t retval;
+    if(retval = light_object_add(&devmgr->header, NULL, "%s", id)) {
+        // log error
+        return retval;
+    }
 
-    return obj;
+    return LIGHT_OK;
 }
 // allocate device memory, and call class/driver init handlers
-device_t *shale_device_new(uint8_t *id, driver_t *dev_driver)
+uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, const uint8_t *id)
 {
-    shale_device_manager_device_new(manager_default, id, dev_driver);
+    return shale_device_init_ctx(&manager_default, dev, dev_driver, id);
 }
 
 // TODO extract hardware-specific queueing code
-device_t *shale_device_manager_device_new(device_manager_t *context, uint8_t *id, driver_t *dev_driver)
+uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t *dev_driver, const uint8_t *id)
 {
     assert_class(dev_driver->driver_class);
     assert_driver(dev_driver);
     // TODO add assertion to verify manager
-    device_t *device_obj = shale_malloc(sizeof(device_t));
-    light_object_init(&device_obj->header, &ltype_device_instance);
-    device_obj->queue = shale_malloc(sizeof(queue_t));
-    queue_init_with_spinlock(device_obj->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
-    device_obj->class_data = shale_malloc(dev_driver->driver_class->data_length);
-    device_obj->driver_data = shale_malloc(dev_driver->data_length);
-    device_obj->driver = to_device_driver(light_object_get(&dev_driver->header));
-    device_obj->state = SHALE_DEVICE_STATE_INIT;
-    _device_register(context, device_obj, id);
-    dev_driver->driver_class->events.init(device_obj);
-    dev_driver->events.init(device_obj);
-    return device_obj;
+    // light_object_init(&dev->header, &ltype_device_instance);
+    queue_init_with_spinlock(&dev->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
+    dev->driver = to_device_driver(light_object_get(&dev_driver->header));
+    dev->state = SHALE_DEVICE_STATE_INIT;
+    _device_register(context, dev, id);
+    //dev_driver->driver_class->events.init(dev);
+    //dev_driver->events.init(dev);
+    return LIGHT_OK;
 }
 uint8_t _device_register(device_manager_t *context, device_t *device, const uint8_t *id)
 {
@@ -184,14 +188,13 @@ uint8_t _device_register(device_manager_t *context, device_t *device, const uint
     if(!(retval = light_object_add(&device->header, &context->header, "%s", id)))
         return retval;
     context->device_table[context->device_count++] = device;
-    device->context = context;
     return SHALE_SUCCESS;
 }
 
 bool shale_device_message_pending(device_t *device)
 {
     message_handle_t *handle;
-    return queue_try_peek(device->queue, &handle);
+    return queue_try_peek(&device->queue, &handle);
 }
 message_handle_t *shale_device_message_get_next(device_t *device)
 {

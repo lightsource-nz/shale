@@ -13,7 +13,7 @@ target_sources(
 
 if(NOT PICO_NO_HARDWARE)
     target_link_libraries(
-        shale_core
+        oled_common
         INTERFACE
         hardware_spi
         hardware_i2c

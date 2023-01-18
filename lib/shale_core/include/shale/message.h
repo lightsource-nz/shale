@@ -5,6 +5,7 @@
 #define MX_DONE             0x00
 #define MX_DELEGATE         0x01
 #define MX_FORWARD          0x02
+#define MX_ABORT            0x03
 #define MX_ERROR            0xFF
 
 // message delivery status codes

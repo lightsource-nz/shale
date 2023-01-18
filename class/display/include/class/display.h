@@ -51,32 +51,25 @@ typedef struct display_api {
 } display_api_t;
 
 typedef struct display_driver {
-    struct light_object header;
-    const display_api_t *driver_api;
-    const uint8_t data_length;
+    driver_t header;
+    display_api_t *api;
 } display_driver_t;
+#define to_display_driver(ptr) container_of(ptr, display_driver_t, header)
 
-typedef struct display_data {
+typedef struct display_device {
+    device_t header;
     dimension_t dimension;
     uint8_t channels;
     uint8_t encoding;
     uint8_t bpp;
     uint8_t framerate_hz;
     uint8_t *buffer_start;
-} display_data_t;
-
-typedef struct display_device {
-    struct light_object header;
-    device_manager_t *context;
-    class_t *dev_class;             // should always be class_display
-    display_driver_t *driver;
-    display_data_t *class_data;
-    void *driver_api;
-    void *driver_data;
 } display_device_t;
+#define to_display_device(ptr) container_of(ptr, display_device_t, header)
 
 class_t *shale_class_display();
-void shale_class_display_init();
+uint8_t shale_class_display_init();
+uint8_t shale_class_display_device_init(display_device_t *device, display_driver_t *driver, const uint8_t *id);
 
 dimension_t shale_display_dimension_get(display_device_t *dev);
 uint8_t shale_display_channels_get(display_device_t *dev);
