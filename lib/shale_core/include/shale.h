@@ -120,13 +120,10 @@ extern struct lobj_type ltype_device_instance;
 #define to_device_instance(object) container_of(object, device_t, header)
 
 typedef struct device {
+    queue_t queue;
     struct light_object header;
-    device_manager_t *context;
     driver_t *driver;
-    queue_t *queue;
     uint8_t state;
-    uint8_t *class_data;
-    uint8_t *driver_data;
 } device_t;
 
 extern struct lobj_type ltype_device_manager;
@@ -147,8 +144,8 @@ typedef struct device_manager {
 void shale_init();
 
 device_manager_t *shale_device_manager_new(uint8_t *id);
-device_t *shale_device_new(uint8_t *id, driver_t *dev_driver);
-device_t *shale_device_manager_device_new(device_manager_t *context, uint8_t *id, driver_t *dev_driver);
+uint8_t shale_device_init(device_t *dev, uint8_t *id, driver_t *dev_driver);
+uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, uint8_t *id, driver_t *dev_driver);
 bool shale_device_message_pending(device_t *device);
 message_handle_t *shale_device_message_get_next(device_t *device);
 
