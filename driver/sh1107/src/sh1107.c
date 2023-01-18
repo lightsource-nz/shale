@@ -56,6 +56,7 @@ uint8_t shale_driver_sh1107_device_init(sh1107_device_t *device, const uint8_t *
 }
 Message_Handler(shale_driver_sh1107_handle_message)
 {
+    sh1107_device_t *sh_device = to_sh1107_device(to_display_device(device));
     switch(handle->msg.msg_id) {
         case DISPLAY_SET_DIMENSION:
         /* TODO validate dimensions against hw */
