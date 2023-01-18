@@ -31,6 +31,7 @@ typedef struct spi_port {
     uint8_t pin_sck;
     uint8_t pin_miso;
     uint8_t pin_mosi;
+    uint8_t pin_cs;
     uint8_t pin_dc;
 } spi_port_t;
 
@@ -49,5 +50,6 @@ typedef struct ioport {
 } ioport_t;
 
 void shale_oled_ioport_init(ioport_t *port);
+void shale_oled_ioport_bind_spi(ioport_t *port, uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi, uint8_t pin_cs, uint8_t pin_dc);
 
 #endif
