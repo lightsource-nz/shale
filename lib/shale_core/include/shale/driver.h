@@ -20,6 +20,17 @@ typedef struct device_driver {
     class_t *driver_class;
     handler_block_t events;
 } driver_t;
+typedef struct class_descriptor {
+    class_t object;
+    const uint8_t *id;
+    message_handler_t handler;
+} class_descriptor_t;
+typedef struct driver_descriptor {
+    driver_t object;
+    const uint8_t *id;
+    class_descriptor_t *parent;
+    message_handler_t handler;
+} driver_descriptor_t;
 
 extern struct lobj_type ltype_device_class;
 extern struct lobj_type ltype_device_driver;

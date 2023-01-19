@@ -17,7 +17,8 @@ uint16_t sh1107_get_px_addr(device_t *device, point2_t pixel);
 #   define SH1107_I2C_PORT_DEFAULT 0
 #endif
 
-static display_driver_t *driver_sh1107;
+Shale_Static_Driver_Define(driver_sh1107, class_display, DRIVER_ID_SH1107, shale_driver_sh1107_handle_message);
+//driver_t *driver_sh1107;
 
 uint8_t shale_driver_sh1107_init()
 {

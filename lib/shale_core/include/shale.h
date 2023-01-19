@@ -100,9 +100,24 @@
 #define SHALE_DEVICE_STATE_SUSPEND      2
 #define SHALE_DEVICE_STATE_ERROR        UINT8_MAX
 
-#define Shale_Static_Class(name) class_t* __section(".shaledata.classes") _##name = &name
-#define Shale_Static_Driver(name) driver_t* __section(".shaledata.drivers") _##name = &name
-#define Shale_Static_Device(name) device_t* __section(".shaledata.devices") _##name = &name
+#ifdef PICO_RP2040
+#define __static_class __section(".shaledata.classes")
+#else
+#define __static_class
+#endif
+
+#define Shale_Static_Class(name) \
+        extern class_descriptor_t _##name; \
+        class_descriptor_t* __static_class name = &_##name
+#define Shale_Static_Driver(name) \
+        extern driver_descriptor_t _##name; \
+        driver_descriptor_t* __section(".shaledata.drivers") name = &_##name
+//#define Shale_Static_Device(name) device_t* __section(".shaledata.devices") _##name = &name
+
+#define Shale_Static_Class_Define(name, _id, _handler) \
+        class_descriptor_t _##name = { .id = _id, .handler = _handler }
+#define Shale_Static_Driver_Define(name, _class, _id, _handler) \
+        driver_descriptor_t _##name = { .parent = _class, .id = _id, .handler = _handler }
 
 typedef struct device_manager device_manager_t;
 typedef struct device_class class_t;

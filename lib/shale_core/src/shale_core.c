@@ -6,12 +6,7 @@
 #include <pico/sync.h>
 #include <string.h>
 
-extern void const *__shaledata_classes_start;
-extern void const *__shaledata_classes_end;
-extern void const *__shaledata_drivers_start;
-extern void const *__shaledata_drivers_end;
-extern void const *__shaledata_devices_start;
-extern void const *__shaledata_devices_end;
+device_manager_t manager_default;
 
 static void _device_instance_release(struct light_object *obj);
 struct lobj_type ltype_device_instance = {
@@ -22,9 +17,38 @@ struct lobj_type ltype_device_manager = {
         .release = &_device_manager_release
 };
 
-device_manager_t manager_default;
+extern void const *__shaledata_classes_start;
+extern void const *__shaledata_classes_end;
+extern void const *__shaledata_drivers_start;
+extern void const *__shaledata_drivers_end;
+extern void const *__shaledata_devices_start;
+extern void const *__shaledata_devices_end;
 
-
+static void shale_load_static_classes()
+{
+        uint8_t load_count = 0;
+        class_descriptor_t *next_class = __shaledata_classes_start;
+        while (next_class < __shaledata_classes_end)
+        {
+                shale_class_init(&next_class->object, next_class->id, next_class->handler);
+                load_count++;
+                next_class++;
+        }
+        light_debug("preloaded %d device classes", load_count);
+}
+static void shale_load_static_drivers()
+{
+        uint8_t load_count = 0;
+        driver_descriptor_t *next_driver = __shaledata_drivers_start;
+        while (next_driver < __shaledata_drivers_end)
+        {
+                shale_driver_init(&next_driver->object, &next_driver->parent->object,
+                                    next_driver->id, next_driver->handler);
+                load_count++;
+                next_driver++;
+        }
+        light_debug("preloaded %d device drivers", load_count);
+}
 
 int16_t _list_indexof(void *list[], uint8_t count, void *item)
 {

@@ -26,7 +26,7 @@
 #define DISPLAY_SET_DIMENSION           8
 #define DISPLAY_SET_FRAMERATE           9
 
-#define DISPLAY_CLASS_DATA_SIZE         (sizeof(display_data_t))
+//#define DISPLAY_CLASS_DATA_SIZE         (sizeof(display_data_t))
 
 // geometric primitives
 typedef struct vector2b {
@@ -41,6 +41,8 @@ typedef vector2b_t dimension_t;
 
 typedef struct display_device display_device_t;
 
+// these types are made redundant by message-based procedure calling
+/*
 typedef struct display_api {
     dimension_t (*get_dimension)(display_device_t*);
     uint8_t (*get_channels)(display_device_t*);
@@ -55,6 +57,9 @@ typedef struct display_driver {
     display_api_t *api;
 } display_driver_t;
 #define to_display_driver(ptr) container_of(ptr, display_driver_t, header)
+*/
+
+Shale_Static_Class(class_display);
 
 typedef struct display_device {
     device_t header;
