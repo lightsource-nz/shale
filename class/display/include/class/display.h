@@ -74,7 +74,7 @@ typedef struct display_device {
 
 class_t *shale_class_display();
 uint8_t shale_class_display_init();
-uint8_t shale_class_display_device_init(display_device_t *device, display_driver_t *driver, const uint8_t *id);
+uint8_t shale_class_display_device_init(display_device_t *device, driver_t *driver, const uint8_t *id);
 
 dimension_t shale_display_dimension_get(display_device_t *dev);
 uint8_t shale_display_channels_get(display_device_t *dev);

@@ -48,7 +48,7 @@ Message_Handler(shale_class_display_handle_message)
 }
 class_t *shale_class_display()
 {
-    return class_display;
+    return &class_display->object;
 }
 
 void shale_class_display_dispatch(device_t *device)

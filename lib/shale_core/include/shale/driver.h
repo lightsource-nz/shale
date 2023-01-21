@@ -1,8 +1,6 @@
 #ifndef _SHALE_DRIVER_H
 #define _SHALE_DRIVER_H
 
-#include <light_object.h>
-
 typedef uint8_t (*message_handler_t)(device_t *, message_handle_t *);
 
 typedef struct handler_block {
@@ -21,12 +19,12 @@ typedef struct device_driver {
     handler_block_t events;
 } driver_t;
 typedef struct class_descriptor {
-    class_t object;
+    class_t *object;
     const uint8_t *id;
     message_handler_t handler;
 } class_descriptor_t;
 typedef struct driver_descriptor {
-    driver_t object;
+    driver_t *object;
     const uint8_t *id;
     class_descriptor_t *parent;
     message_handler_t handler;
@@ -39,6 +37,30 @@ extern struct lobj_type ltype_device_driver;
 
 #define to_device_class(object) container_of(object, class_t, header)
 #define to_device_driver(object) container_of(object, driver_t, header)
+
+#ifdef PICO_RP2040
+#define __static_class __section(".shaledata.classes")
+#define Light_Object_Loader_Hack(name)
+#else
+#define __static_class
+#define Light_Object_Loader_Hack(name) \
+        
+#endif
+
+#define Shale_Static_Class(name) \
+        extern class_descriptor_t _##name; \
+        class_descriptor_t* __static_class name = &_##name
+#define Shale_Static_Driver(name) \
+        extern driver_descriptor_t _##name; \
+        driver_descriptor_t* __static_class name = &_##name
+//#define Shale_Static_Device(name) device_t* __section(".shaledata.devices") _##name = &name
+
+#define Shale_Static_Class_Define(name, _id, _handler) \
+        static class_t _##name##_impl; \
+        class_descriptor_t __in_flash _##name = { .object = &_##name##_impl, .id = _id, .handler = _handler }
+#define Shale_Static_Driver_Define(name, _class, _id, _handler) \
+        static driver_t _##name##_impl; \
+        driver_descriptor_t __in_flash _##name = { .object = &_##name##_impl, .parent = _class, .id = _id, .handler = _handler }
 
 uint8_t shale_class_init(class_t *_class, const uint8_t *id, message_handler_t handler);
 uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id, message_handler_t handler);
