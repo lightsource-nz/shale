@@ -21,7 +21,7 @@ uint8_t shale_class_display_init()
 uint8_t shale_class_display_device_init(display_device_t *device, driver_t *driver, const uint8_t *id)
 {
     // TODO verify validity of display driver
-    return shale_device_init(&device->header, &driver->header, id);
+    return shale_device_init(&device->header, driver, id);
 }
 // TODO add return codes to allow message handlers to either consume messages,
 //  or delegate handling to the driver level
@@ -48,7 +48,7 @@ Message_Handler(shale_class_display_handle_message)
 }
 class_t *shale_class_display()
 {
-    return &class_display->object;
+    return &_class_display;
 }
 
 void shale_class_display_dispatch(device_t *device)

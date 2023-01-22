@@ -17,7 +17,7 @@ uint16_t sh1107_get_px_addr(device_t *device, point2_t pixel);
 #   define SH1107_I2C_PORT_DEFAULT 0
 #endif
 
-Shale_Static_Driver_Define(driver_sh1107, class_display, DRIVER_ID_SH1107, shale_driver_sh1107_handle_message);
+Shale_Static_Driver_Define(driver_sh1107, class_display_desc, DRIVER_ID_SH1107, shale_driver_sh1107_handle_message);
 //driver_t *driver_sh1107;
 
 uint8_t shale_driver_sh1107_init()
@@ -25,7 +25,7 @@ uint8_t shale_driver_sh1107_init()
     class_t *driver_class = shale_class_display();
     assert_class(driver_class);
     uint8_t retval;
-    if(retval = shale_driver_init(&driver_sh1107->header, driver_class, DRIVER_ID_SH1107,
+    if(retval = shale_driver_init(&_driver_sh1107, driver_class, DRIVER_ID_SH1107,
                                   &shale_driver_sh1107_handle_message)) {
         // log error
         return retval;
@@ -35,7 +35,7 @@ uint8_t shale_driver_sh1107_init()
 uint8_t shale_driver_sh1107_device_init(sh1107_device_t *device, const uint8_t *id)
 {
     uint8_t retval;
-    if(retval = shale_class_display_device_init(&device->header, driver_sh1107, id)) {
+    if(retval = shale_class_display_device_init(&device->header, &_driver_sh1107, id)) {
         // log error
         return retval;
     }
@@ -66,9 +66,9 @@ Message_Handler(shale_driver_sh1107_handle_message)
     // message not handled, pass to parent
     return MX_DELEGATE;
 }
-display_driver_t *shale_driver_sh1107()
+driver_t *shale_driver_sh1107()
 {
-    return driver_sh1107;
+    return &_driver_sh1107;
 }
 
 // write a single value of up to 4 bytes to the given address. smaller values are read from

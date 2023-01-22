@@ -27,10 +27,10 @@ extern void const *__shaledata_devices_end;
 static void shale_load_static_classes()
 {
         uint8_t load_count = 0;
-        class_descriptor_t *next_class = __shaledata_classes_start;
-        while (next_class < __shaledata_classes_end)
+        const class_descriptor_t *next_class = __shaledata_classes_start;
+        while (next_class < (const class_descriptor_t *) __shaledata_classes_end)
         {
-                shale_class_init(&next_class->object, next_class->id, next_class->handler);
+                shale_class_static_add(next_class);
                 load_count++;
                 next_class++;
         }
@@ -39,11 +39,10 @@ static void shale_load_static_classes()
 static void shale_load_static_drivers()
 {
         uint8_t load_count = 0;
-        driver_descriptor_t *next_driver = __shaledata_drivers_start;
-        while (next_driver < __shaledata_drivers_end)
+        const driver_descriptor_t *next_driver = __shaledata_drivers_start;
+        while (next_driver < (const driver_descriptor_t *) __shaledata_drivers_end)
         {
-                shale_driver_init(&next_driver->object, &next_driver->parent->object,
-                                    next_driver->id, next_driver->handler);
+                shale_driver_static_add(next_driver);
                 load_count++;
                 next_driver++;
         }
