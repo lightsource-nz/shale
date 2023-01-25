@@ -19,6 +19,7 @@ struct lobj_type ltype_device_manager = {
         .release = &_device_manager_release
 };
 
+#ifdef PICO_RP2040
 extern void const *__shaledata_classes_start;
 extern void const *__shaledata_classes_end;
 extern void const *__shaledata_drivers_start;
@@ -50,6 +51,25 @@ static void shale_load_static_drivers()
         }
         light_debug("preloaded %d device drivers", load_count);
 }
+#else
+uint8_t static_class_count, static_driver_count = 0;
+const class_descriptor_t *static_classes[SHALE_MAX_STATIC_CLASSES];
+const driver_descriptor_t *static_drivers[SHALE_MAX_STATIC_DRIVERS];
+static void shale_load_static_classes()
+{
+        for(uint8_t i = 0; i < static_class_count; i++) {
+                shale_class_static_add(static_classes[i]);
+        }
+        light_debug("preloaded %d device classes",static_class_count);
+}
+static void shale_load_static_drivers()
+{
+        for(uint8_t i = 0; i < static_driver_count; i++) {
+                shale_driver_static_add(static_drivers[i]);
+        }
+        light_debug("preloaded %d device drivers",static_driver_count);
+}
+#endif
 
 int16_t _list_indexof(void *list[], uint8_t count, void *item)
 {
@@ -201,7 +221,9 @@ uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t
     assert_driver(dev_driver);
     // TODO add assertion to verify manager
     // light_object_init(&dev->header, &ltype_device_instance);
+#ifdef PICO_RP2040
     queue_init_with_spinlock(&dev->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
+#endif
     dev->driver = to_device_driver(light_object_get(&dev_driver->header));
     dev->state = SHALE_DEVICE_STATE_INIT;
     _device_register(context, dev, id);
@@ -224,7 +246,11 @@ uint8_t _device_register(device_manager_t *context, device_t *device, const uint
 bool shale_device_message_pending(device_t *device)
 {
     message_handle_t *handle;
+#ifdef PICO_RP2040
     return queue_try_peek(&device->queue, &handle);
+#else
+    return false;
+#endif
 }
 message_handle_t *shale_device_message_get_next(device_t *device)
 {

@@ -83,6 +83,9 @@
 // TODO move this to platform-specific config files
 #define SHALE_CPU_HARD_THREAD_COUNT     2
 
+#define SHALE_MAX_STATIC_CLASSES        8
+#define SHALE_MAX_STATIC_DRIVERS        8
+
 #define SHALE_MAX_CLASSES               8
 #define SHALE_CLASS_MAX_DRIVERS         8
 #define SHALE_MAX_DEVICES               24
