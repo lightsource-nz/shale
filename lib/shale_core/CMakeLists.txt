@@ -19,6 +19,7 @@ if(NOT PICO_NO_HARDWARE)
     target_link_libraries(
         shale_core
         INTERFACE
+        pico_util
         hardware_exception
     )
 endif()
@@ -27,6 +28,5 @@ target_link_libraries(
     shale_core
     INTERFACE
     light_object
-    pico_util
 )
 

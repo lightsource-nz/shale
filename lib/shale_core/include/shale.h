@@ -14,7 +14,10 @@
 #include <stdio.h>
 
 #include <pico/platform.h>
+
+#ifdef PICO_RP2040
 #include <pico/util/queue.h>
+#endif
 
 #include <light_object.h>
 
@@ -115,8 +118,12 @@ extern struct lobj_type ltype_device_instance;
 #define LTYPE_DEVICE_INSTANCE_NAME "device_instance"
 #define to_device_instance(object) container_of(object, device_t, header)
 
+// TODO provide a platform agnostic message queueing interface which also
+// works in host mode
 typedef struct device {
+#ifdef PICO_RP2040
     queue_t queue;
+#endif
     struct light_object header;
     driver_t *driver;
     uint8_t state;
@@ -130,7 +137,9 @@ extern struct lobj_type ltype_device_manager;
 typedef struct device_manager {
     struct light_object header;
     uint8_t scheduler_strategy;
+#ifdef PICO_RP2040
     int mq_lock;
+#endif
     uint8_t device_count;
     device_t *device_table[SHALE_MANAGER_MAX_DEVICES];
 } device_manager_t;
