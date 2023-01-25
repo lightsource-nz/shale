@@ -114,14 +114,15 @@ uint8_t shale_init()
     uint8_t retval;
     light_object_setup();
     shale_thread_init();
+    
+    shale_load_static_classes();
+    shale_load_static_drivers();
+
     if(retval = shale_device_manager_init(&manager_default, SHALE_MANAGER_DEFAULT_NAME)) {
         // TODO log error
         return retval;
     }
 
-    // TODO implement initializer arrays in linker script
-    // shale_process_static_classes();
-    // shale_process_static_drivers();
     return LIGHT_OK;
 }
 #define SERVICE_COUNT_INF UINT16_MAX
