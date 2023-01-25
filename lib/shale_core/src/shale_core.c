@@ -3,7 +3,9 @@
 #include "shale.h"
 #include "shale_internal.h"
 
+#ifdef PICO_RP2040
 #include <pico/sync.h>
+#endif
 #include <string.h>
 
 device_manager_t manager_default;
@@ -142,7 +144,8 @@ void _service_message_queues()
 {
 
 }
-
+// TODO replace with platform independent message dispatch function
+#ifdef PICO_RP2040
 void _dispatch_message_for_device(device_t *device)
 {
     message_handle_t *handle;
@@ -164,12 +167,16 @@ void _dispatch_message_for_device(device_t *device)
             break;
         }
     }
-
 }
+#else
+void _dispatch_message_for_device(device_t *device) {}
+#endif
 uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id)
 {
     light_object_init(&devmgr->header, &ltype_device_manager);
+#ifdef PICO_RP2040
     devmgr->mq_lock = spin_lock_claim_unused(true);
+#endif
     devmgr->scheduler_strategy = SHALE_MANAGER_STRATEGY_RR;
     devmgr->device_count = 0;
 

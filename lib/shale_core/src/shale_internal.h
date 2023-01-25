@@ -9,7 +9,6 @@
 #   error __file__ " must be included after shale.h"
 #endif
 
-#include <pico/util/queue.h>
 #include <stdlib.h>
 
 #define SHALE_THREAD_ACTIVE         0x00
