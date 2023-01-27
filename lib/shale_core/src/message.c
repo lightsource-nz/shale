@@ -24,7 +24,9 @@ void message_handle_destroy(message_handle_t *handle)
 message_handle_t *shale_message_send(message_t message)
 {
     message_handle_t *handle = message_handle_new(message);
+#ifdef PICO_RP2040
     queue_add_blocking(&message.target->queue, handle);
+#endif
     return handle;
 }
 void shale_message_await(message_handle_t *handle, uint8_t status)

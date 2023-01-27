@@ -28,6 +28,14 @@ static void _device_driver_release(struct light_object *obj)
     free(to_device_driver(obj));
 }
 
+uint8_t shale_class_static_add(const class_descriptor_t *desc)
+{
+        shale_class_init(desc->object, desc->id, desc->handler);
+}
+uint8_t shale_driver_static_add(const driver_descriptor_t *desc)
+{
+        shale_driver_init(desc->object, desc->parent->object, desc->id, desc->handler);
+}
 uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, message_handler_t message)
 {
     light_object_init(&class_obj->header, &ltype_device_class);

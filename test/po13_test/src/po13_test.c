@@ -10,8 +10,8 @@
 void main()
 {
     shale_init();
-    shale_class_display_init();
-    shale_driver_sh1107_init();
+//    shale_class_display_init();
+//    shale_driver_sh1107_init();
 
     sh1107_device_t display_main;
     uint8_t status = shale_driver_sh1107_device_init(&display_main, ID_DISPLAY_MAIN);
