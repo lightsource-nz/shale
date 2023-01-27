@@ -3,6 +3,7 @@
 #include "shale.h"
 #include "shale_internal.h"
 
+#include <pico/platform.h>
 #ifdef PICO_RP2040
 #include <pico/sync.h>
 #endif
@@ -20,18 +21,15 @@ struct lobj_type ltype_device_manager = {
 };
 
 #ifdef PICO_RP2040
-extern void const *__shaledata_classes_start;
-extern void const *__shaledata_classes_end;
-extern void const *__shaledata_drivers_start;
-extern void const *__shaledata_drivers_end;
-extern void const *__shaledata_devices_start;
-extern void const *__shaledata_devices_end;
+extern int __shaledata_classes_start, __shaledata_classes_end;
+extern int __shaledata_drivers_start, __shaledata_drivers_end;
+extern int __shaledata_devices_start, __shaledata_devices_end;
 
 static void shale_load_static_classes()
 {
         uint8_t load_count = 0;
-        const class_descriptor_t *next_class = __shaledata_classes_start;
-        while (next_class < (const class_descriptor_t *) __shaledata_classes_end)
+        const class_descriptor_t *next_class = (const class_descriptor_t *) &__shaledata_classes_start;
+        while (next_class < (const class_descriptor_t *) &__shaledata_classes_end)
         {
                 shale_class_static_add(next_class);
                 load_count++;
@@ -42,8 +40,8 @@ static void shale_load_static_classes()
 static void shale_load_static_drivers()
 {
         uint8_t load_count = 0;
-        const driver_descriptor_t *next_driver = __shaledata_drivers_start;
-        while (next_driver < (const driver_descriptor_t *) __shaledata_drivers_end)
+        const driver_descriptor_t *next_driver = (const driver_descriptor_t *) &__shaledata_drivers_start;
+        while (next_driver < (const driver_descriptor_t *) &__shaledata_drivers_end)
         {
                 shale_driver_static_add(next_driver);
                 load_count++;

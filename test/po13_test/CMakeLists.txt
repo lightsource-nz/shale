@@ -10,6 +10,7 @@ target_link_libraries(
     class_display
     driver_sh1107
 )
+shale_link_static_objects(po13_test)
 if(NOT PICO_NO_HARDWARE)
         pico_enable_stdio_semihosting(light_object_demo 1)
         target_link_libraries(po13_test PUBLIC pico_stdlib)
