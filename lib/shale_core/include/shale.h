@@ -12,9 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include <pico/platform.h>
+
+#ifdef PICO_RP2040
 #include <pico/util/queue.h>
+#endif
 
 #include <light_object.h>
 
@@ -79,6 +83,9 @@
 // TODO move this to platform-specific config files
 #define SHALE_CPU_HARD_THREAD_COUNT     2
 
+#define SHALE_MAX_STATIC_CLASSES        8
+#define SHALE_MAX_STATIC_DRIVERS        8
+
 #define SHALE_MAX_CLASSES               8
 #define SHALE_CLASS_MAX_DRIVERS         8
 #define SHALE_MAX_DEVICES               24
@@ -100,10 +107,6 @@
 #define SHALE_DEVICE_STATE_SUSPEND      2
 #define SHALE_DEVICE_STATE_ERROR        UINT8_MAX
 
-#define Shale_Static_Class(name) class_t* __section(".shaledata.classes") _##name = &name
-#define Shale_Static_Driver(name) driver_t* __section(".shaledata.drivers") _##name = &name
-#define Shale_Static_Device(name) device_t* __section(".shaledata.devices") _##name = &name
-
 typedef struct device_manager device_manager_t;
 typedef struct device_class class_t;
 typedef struct device_driver driver_t;
@@ -119,8 +122,12 @@ extern struct lobj_type ltype_device_instance;
 #define LTYPE_DEVICE_INSTANCE_NAME "device_instance"
 #define to_device_instance(object) container_of(object, device_t, header)
 
+// TODO provide a platform agnostic message queueing interface which also
+// works in host mode
 typedef struct device {
+#ifdef PICO_RP2040
     queue_t queue;
+#endif
     struct light_object header;
     driver_t *driver;
     uint8_t state;
@@ -134,7 +141,9 @@ extern struct lobj_type ltype_device_manager;
 typedef struct device_manager {
     struct light_object header;
     uint8_t scheduler_strategy;
+#ifdef PICO_RP2040
     int mq_lock;
+#endif
     uint8_t device_count;
     device_t *device_table[SHALE_MANAGER_MAX_DEVICES];
 } device_manager_t;

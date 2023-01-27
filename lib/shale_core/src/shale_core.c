@@ -3,15 +3,13 @@
 #include "shale.h"
 #include "shale_internal.h"
 
+#include <pico/platform.h>
+#ifdef PICO_RP2040
 #include <pico/sync.h>
+#endif
 #include <string.h>
 
-extern void const *__shaledata_classes_start;
-extern void const *__shaledata_classes_end;
-extern void const *__shaledata_drivers_start;
-extern void const *__shaledata_drivers_end;
-extern void const *__shaledata_devices_start;
-extern void const *__shaledata_devices_end;
+device_manager_t manager_default;
 
 static void _device_instance_release(struct light_object *obj);
 struct lobj_type ltype_device_instance = {
@@ -22,9 +20,54 @@ struct lobj_type ltype_device_manager = {
         .release = &_device_manager_release
 };
 
-device_manager_t manager_default;
+#ifdef PICO_RP2040
+extern int __shaledata_classes_start, __shaledata_classes_end;
+extern int __shaledata_drivers_start, __shaledata_drivers_end;
+extern int __shaledata_devices_start, __shaledata_devices_end;
 
-
+static void shale_load_static_classes()
+{
+        uint8_t load_count = 0;
+        const class_descriptor_t *next_class = (const class_descriptor_t *) &__shaledata_classes_start;
+        while (next_class < (const class_descriptor_t *) &__shaledata_classes_end)
+        {
+                shale_class_static_add(next_class);
+                load_count++;
+                next_class++;
+        }
+        light_debug("preloaded %d device classes", load_count);
+}
+static void shale_load_static_drivers()
+{
+        uint8_t load_count = 0;
+        const driver_descriptor_t *next_driver = (const driver_descriptor_t *) &__shaledata_drivers_start;
+        while (next_driver < (const driver_descriptor_t *) &__shaledata_drivers_end)
+        {
+                shale_driver_static_add(next_driver);
+                load_count++;
+                next_driver++;
+        }
+        light_debug("preloaded %d device drivers", load_count);
+}
+#else
+uint8_t static_class_count, static_driver_count = 0;
+const class_descriptor_t *static_classes[SHALE_MAX_STATIC_CLASSES];
+const driver_descriptor_t *static_drivers[SHALE_MAX_STATIC_DRIVERS];
+static void shale_load_static_classes()
+{
+        for(uint8_t i = 0; i < static_class_count; i++) {
+                shale_class_static_add(static_classes[i]);
+        }
+        light_debug("preloaded %d device classes",static_class_count);
+}
+static void shale_load_static_drivers()
+{
+        for(uint8_t i = 0; i < static_driver_count; i++) {
+                shale_driver_static_add(static_drivers[i]);
+        }
+        light_debug("preloaded %d device drivers",static_driver_count);
+}
+#endif
 
 int16_t _list_indexof(void *list[], uint8_t count, void *item)
 {
@@ -69,14 +112,15 @@ uint8_t shale_init()
     uint8_t retval;
     light_object_setup();
     shale_thread_init();
+    
+    shale_load_static_classes();
+    shale_load_static_drivers();
+
     if(retval = shale_device_manager_init(&manager_default, SHALE_MANAGER_DEFAULT_NAME)) {
         // TODO log error
         return retval;
     }
 
-    // TODO implement initializer arrays in linker script
-    // shale_process_static_classes();
-    // shale_process_static_drivers();
     return LIGHT_OK;
 }
 #define SERVICE_COUNT_INF UINT16_MAX
@@ -119,7 +163,8 @@ void _service_message_queues()
 {
 
 }
-
+// TODO replace with platform independent message dispatch function
+#ifdef PICO_RP2040
 void _dispatch_message_for_device(device_t *device)
 {
     message_handle_t *handle;
@@ -141,12 +186,16 @@ void _dispatch_message_for_device(device_t *device)
             break;
         }
     }
-
 }
+#else
+void _dispatch_message_for_device(device_t *device) {}
+#endif
 uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id)
 {
     light_object_init(&devmgr->header, &ltype_device_manager);
+#ifdef PICO_RP2040
     devmgr->mq_lock = spin_lock_claim_unused(true);
+#endif
     devmgr->scheduler_strategy = SHALE_MANAGER_STRATEGY_RR;
     devmgr->device_count = 0;
 
@@ -171,7 +220,9 @@ uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t
     assert_driver(dev_driver);
     // TODO add assertion to verify manager
     // light_object_init(&dev->header, &ltype_device_instance);
+#ifdef PICO_RP2040
     queue_init_with_spinlock(&dev->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
+#endif
     dev->driver = to_device_driver(light_object_get(&dev_driver->header));
     dev->state = SHALE_DEVICE_STATE_INIT;
     _device_register(context, dev, id);
@@ -194,7 +245,11 @@ uint8_t _device_register(device_manager_t *context, device_t *device, const uint
 bool shale_device_message_pending(device_t *device)
 {
     message_handle_t *handle;
+#ifdef PICO_RP2040
     return queue_try_peek(&device->queue, &handle);
+#else
+    return false;
+#endif
 }
 message_handle_t *shale_device_message_get_next(device_t *device)
 {

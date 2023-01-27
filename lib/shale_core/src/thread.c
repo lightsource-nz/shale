@@ -82,6 +82,7 @@ uint8_t shale_thread_set_state(shale_thread_t *thread, uint8_t state)
 
 // ------------------------------------------------------
 // BEGIN PLATFORM-SPECIFIC CODE
+#ifdef PICO_RP2040
 #include <pico/sync.h>
 
 uint8_t shale_port_rp2040_hart_id_current()
@@ -89,3 +90,9 @@ uint8_t shale_port_rp2040_hart_id_current()
     // on RP2040, hart-id is equal to core number
     return get_core_num();
 }
+#else // by default assume hardware is single-threaded
+uint8_t shale_port_rp2040_hart_id_current()
+{
+    return 0;
+}
+#endif
