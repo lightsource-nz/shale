@@ -3,12 +3,19 @@
 #include "shale.h"
 #include "shale_internal.h"
 
+static void _class_table_child_add(struct light_object *obj, struct light_object *child);
+static void _class_table_child_remove(struct light_object *obj, struct light_object *child);
+struct lobj_type ltype_class_table = {
+        .release = NULL,
+        .evt_add = NULL,
+        .evt_child_add = _class_table_child_add,
+        .evt_child_remove = _class_table_child_remove
+};
 static void _device_class_release(struct light_object *obj);
-static void _device_driver_release(struct light_object *obj);
-
 struct lobj_type ltype_device_class = {
         .release = &_device_class_release
 };
+static void _device_driver_release(struct light_object *obj);
 struct lobj_type ltype_device_driver = {
         .release = &_device_driver_release
 };
@@ -27,14 +34,19 @@ static void _device_driver_release(struct light_object *obj)
 {
     free(to_device_driver(obj));
 }
-
+void shale_class_setup()
+{
+    light_object_init(&class_table_global.header, &ltype_class_table);
+}
 uint8_t shale_class_static_add(const class_descriptor_t *desc)
 {
         shale_class_init(desc->object, desc->id, desc->handler);
+        desc->object->header.is_static = 1;
 }
 uint8_t shale_driver_static_add(const driver_descriptor_t *desc)
 {
         shale_driver_init(desc->object, desc->parent->object, desc->id, desc->handler);
+        desc->object->header.is_static = 1;
 }
 uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, message_handler_t message)
 {

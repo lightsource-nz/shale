@@ -73,10 +73,11 @@ extern struct lobj_type ltype_device_driver;
         const driver_descriptor_t* __static_driver name##_desc = &_##name##_desc; \
         Light_Driver_Load(name)
 
-uint8_t shale_class_static_add(const class_descriptor_t *desc);
-uint8_t shale_driver_static_add(const driver_descriptor_t *desc);
-uint8_t shale_class_init(class_t *_class, const uint8_t *id, message_handler_t handler);
-uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id, message_handler_t handler);
+extern void shale_class_setup();
+extern uint8_t shale_class_static_add(const class_descriptor_t *desc);
+extern uint8_t shale_driver_static_add(const driver_descriptor_t *desc);
+extern uint8_t shale_class_init(class_t *_class, const uint8_t *id, message_handler_t handler);
+extern uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id, message_handler_t handler);
 
 static inline class_t *shale_class_get(class_t *_class)
 {
@@ -95,6 +96,6 @@ static inline void shale_driver_put(driver_t *driver)
     light_object_put(&driver->header);
 }
 
-void shale_class_deliver_message(class_t *target, device_t *device, message_handle_t *msg);
-void shale_driver_deliver_message(driver_t *target, device_t *device, message_handle_t *msg);
+extern void shale_class_deliver_message(class_t *target, device_t *device, message_handle_t *msg);
+extern void shale_driver_deliver_message(driver_t *target, device_t *device, message_handle_t *msg);
 #endif
