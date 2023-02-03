@@ -3,9 +3,12 @@
 #include "shale.h"
 #include "shale_internal.h"
 
+#define LTYPE_CLASS_TABLE_NAME "class_table"
+
 static void _class_table_child_add(struct light_object *obj, struct light_object *child);
 static void _class_table_child_remove(struct light_object *obj, struct light_object *child);
 struct lobj_type ltype_class_table = {
+        .id = LTYPE_CLASS_TABLE_NAME,
         .release = NULL,
         .evt_add = NULL,
         .evt_child_add = _class_table_child_add,
@@ -26,6 +29,21 @@ static struct class_table {
         class_t *classes[SHALE_MAX_CLASSES];
 } class_table_global;
 
+#define to_class_table(ptr) container_of(ptr, struct class_table, header)
+
+static void _class_table_child_add(struct light_object *obj, struct light_object *child)
+{
+    struct class_table *ctable = to_class_table(obj);
+    class_t *_class = to_device_class(child);
+    // TODO check that _class is not already a member of ctable->classes
+    ctable->classes[ctable->count++] = _class;
+}
+static void _class_table_child_remove(struct light_object *obj, struct light_object *child)
+{
+    struct class_table *ctable = to_class_table(obj);
+    class_t *_class = to_device_class(child);
+    _list_delete_item(&ctable->classes, &ctable->count, _class);
+}
 static void _device_class_release(struct light_object *obj)
 {
     free(to_device_class(obj));
@@ -64,7 +82,7 @@ uint8_t _class_register(class_t *_class, const uint8_t *id)
     if(class_table_global.count >= SHALE_MAX_CLASSES)
         return ERROR_MAX_ENTITIES;
     light_object_add(&_class->header, &class_table_global.header, "%s", id);
-    class_table_global.classes[class_table_global.count++] = _class;
+    //class_table_global.classes[class_table_global.count++] = _class;
     return SHALE_SUCCESS;
 }
 uint8_t _class_add_driver(class_t *_class, driver_t *driver, const uint8_t *id)
