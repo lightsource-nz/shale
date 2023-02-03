@@ -67,9 +67,9 @@ extern struct lobj_type ltype_device_driver;
         const class_descriptor_t __in_flash(".descriptors") _##name##_desc = { .object = &_##name, .id = _id, .handler = _handler }; \
         const class_descriptor_t* __static_class name##_desc = &_##name##_desc; \
         Light_Class_Load(name)
-#define Shale_Static_Driver_Define(name, _class, _id, _handler) \
+#define Shale_Static_Driver_Define(name, _id, _class, _handler) \
         static driver_t _##name; \
-        const driver_descriptor_t __in_flash(".descriptors") _##name##_desc = { .object = &_##name, .parent = _class, .id = _id, .handler = _handler }; \
+        const driver_descriptor_t __in_flash(".descriptors") _##name##_desc = { .object = &_##name, .parent = &_##_class##_desc, .id = _id, .handler = _handler }; \
         const driver_descriptor_t* __static_driver name##_desc = &_##name##_desc; \
         Light_Driver_Load(name)
 

@@ -83,8 +83,12 @@
 // TODO move this to platform-specific config files
 #define SHALE_CPU_HARD_THREAD_COUNT     2
 
+// TODO implement version fields properly
+#define SHALE_VERSION_STR               "0.1.0"
+
 #define SHALE_MAX_STATIC_CLASSES        8
 #define SHALE_MAX_STATIC_DRIVERS        8
+#define SHALE_MAX_STATIC_DEVICES        8
 
 #define SHALE_MAX_CLASSES               8
 #define SHALE_CLASS_MAX_DRIVERS         8
@@ -132,6 +136,31 @@ typedef struct device {
     driver_t *driver;
     uint8_t state;
 } device_t;
+typedef struct device_descriptor {
+    device_t *object;
+    const uint8_t *id;
+    const driver_descriptor_t *driver;
+} device_descriptor_t;
+
+#ifdef PICO_RP2040
+#define __static_device __section(".shaledata.devices")
+#define Light_Device_Load(name)
+#else
+#define __static_device
+#define Light_Device_Load(name) \
+        extern uint8_t static_device_count; \
+        extern const device_descriptor_t *static_devices[]; \
+        void __attribute__((constructor)) _load_##name() { static_devices[static_device_count++] = name##_desc; }
+#endif
+
+#define Shale_Static_Device(name) \
+        extern const device_descriptor_t _##name##_desc
+
+#define Shale_Static_Device_Define(name, _id, _driver) \
+        static device_t _##name; \
+        const device_descriptor_t __in_flash(".descriptors") _##name##_desc = { .object = &_##name, .id = _id, .driver = &_##_driver##_desc }; \
+        const device_descriptor_t* __static_device name##_desc = &_##name##_desc; \
+        Light_Device_Load(name)
 
 extern struct lobj_type ltype_device_manager;
 
@@ -152,6 +181,7 @@ typedef struct device_manager {
 
 uint8_t shale_init();
 
+extern uint8_t shale_device_static_add(const device_descriptor_t *desc);
 uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id);
 uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, const uint8_t *id);
 uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t *dev_driver, const uint8_t *id);

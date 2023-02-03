@@ -49,10 +49,23 @@ static void shale_load_static_drivers()
         }
         light_debug("preloaded %d device drivers", load_count);
 }
+static void shale_load_static_devices()
+{
+        uint8_t load_count = 0;
+        const device_descriptor_t *next_device = (const device_descriptor_t *) &__shaledata_devices_start;
+        while (next_device < (const device_descriptor_t *) &__shaledata_devices_end)
+        {
+                shale_device_static_add(next_device);
+                load_count++;
+                next_device++;
+        }
+        light_debug("preloaded %d devices", load_count);
+}
 #else
-uint8_t static_class_count, static_driver_count = 0;
+uint8_t static_class_count, static_driver_count, static_device_count = 0;
 const class_descriptor_t *static_classes[SHALE_MAX_STATIC_CLASSES];
 const driver_descriptor_t *static_drivers[SHALE_MAX_STATIC_DRIVERS];
+const device_descriptor_t *static_devices[SHALE_MAX_STATIC_DEVICES];
 static void shale_load_static_classes()
 {
         for(uint8_t i = 0; i < static_class_count; i++) {
@@ -66,6 +79,13 @@ static void shale_load_static_drivers()
                 shale_driver_static_add(static_drivers[i]);
         }
         light_debug("preloaded %d device drivers",static_driver_count);
+}
+static void shale_load_static_devices()
+{
+        for(uint8_t i = 0; i < static_device_count; i++) {
+                shale_device_static_add(static_devices[i]);
+        }
+        light_debug("preloaded %d devices",static_device_count);
 }
 #endif
 
@@ -109,17 +129,18 @@ static void _device_manager_release(struct light_object *obj)
 
 uint8_t shale_init()
 {
+    light_info("Loading SHALE v%s...",SHALE_VERSION_STR);
     uint8_t retval;
     light_object_setup();
     shale_thread_init();
     
-    shale_load_static_classes();
-    shale_load_static_drivers();
-
     if(retval = shale_device_manager_init(&manager_default, SHALE_MANAGER_DEFAULT_NAME)) {
         // TODO log error
         return retval;
     }
+    shale_load_static_classes();
+    shale_load_static_drivers();
+    shale_load_static_devices();
 
     return LIGHT_OK;
 }
@@ -207,23 +228,26 @@ uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id)
 
     return LIGHT_OK;
 }
-// allocate device memory, and call class/driver init handlers
+uint8_t shale_device_static_add(const device_descriptor_t *desc)
+{
+        shale_device_init(desc->object, desc->driver->object, desc->id);
+        desc->object->header.is_static = 1;
+}
 uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, const uint8_t *id)
 {
     return shale_device_init_ctx(&manager_default, dev, dev_driver, id);
 }
-
 // TODO extract hardware-specific queueing code
 uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t *dev_driver, const uint8_t *id)
 {
     assert_class(dev_driver->driver_class);
     assert_driver(dev_driver);
     // TODO add assertion to verify manager
-    // light_object_init(&dev->header, &ltype_device_instance);
+    light_object_init(&dev->header, &ltype_device_instance);
 #ifdef PICO_RP2040
     queue_init_with_spinlock(&dev->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
 #endif
-    dev->driver = to_device_driver(light_object_get(&dev_driver->header));
+    dev->driver = shale_driver_get(dev_driver);
     dev->state = SHALE_DEVICE_STATE_INIT;
     _device_register(context, dev, id);
     //dev_driver->driver_class->events.init(dev);
