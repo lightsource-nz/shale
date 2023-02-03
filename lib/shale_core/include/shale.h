@@ -140,7 +140,6 @@ typedef struct device_descriptor {
     device_t *object;
     const uint8_t *id;
     const driver_descriptor_t *driver;
-    message_handler_t handler;
 } device_descriptor_t;
 
 #ifdef PICO_RP2040
@@ -157,9 +156,9 @@ typedef struct device_descriptor {
 #define Shale_Static_Device(name) \
         extern const device_descriptor_t _##name##_desc
 
-#define Shale_Static_Device_Define(name, _id, _handler) \
+#define Shale_Static_Device_Define(name, _id, _driver) \
         static device_t _##name; \
-        const device_descriptor_t __in_flash(".descriptors") _##name##_desc = { .object = &_##name, .id = _id, .handler = _handler }; \
+        const device_descriptor_t __in_flash(".descriptors") _##name##_desc = { .object = &_##name, .id = _id, .driver = &_##_driver##_desc }; \
         const device_descriptor_t* __static_device name##_desc = &_##name##_desc; \
         Light_Device_Load(name)
 
@@ -182,6 +181,7 @@ typedef struct device_manager {
 
 uint8_t shale_init();
 
+extern uint8_t shale_device_static_add(const device_descriptor_t *desc);
 uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id);
 uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, const uint8_t *id);
 uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t *dev_driver, const uint8_t *id);

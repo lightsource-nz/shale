@@ -16,7 +16,9 @@ target_sources(
 
 set(SHALE_CORE_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR} PARENT_SCOPE)
 function(shale_link_static_objects TARGET)
-    pico_set_linker_script(${TARGET} ${SHALE_CORE_SOURCE_DIR}/memmap_shale.ld)
+    if(NOT PICO_NO_HARDWARE)
+        pico_set_linker_script(${TARGET} ${SHALE_CORE_SOURCE_DIR}/memmap_shale.ld)
+    endif()
 endfunction()
 
 if(NOT PICO_NO_HARDWARE)

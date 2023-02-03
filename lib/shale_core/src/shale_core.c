@@ -55,7 +55,7 @@ static void shale_load_static_devices()
         const device_descriptor_t *next_device = (const device_descriptor_t *) &__shaledata_devices_start;
         while (next_device < (const device_descriptor_t *) &__shaledata_devices_end)
         {
-                shale_driver_static_add(next_device);
+                shale_device_static_add(next_device);
                 load_count++;
                 next_device++;
         }
@@ -243,11 +243,11 @@ uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t
     assert_class(dev_driver->driver_class);
     assert_driver(dev_driver);
     // TODO add assertion to verify manager
-    // light_object_init(&dev->header, &ltype_device_instance);
+    light_object_init(&dev->header, &ltype_device_instance);
 #ifdef PICO_RP2040
     queue_init_with_spinlock(&dev->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
 #endif
-    dev->driver = to_device_driver(light_object_get(&dev_driver->header));
+    dev->driver = shale_driver_get(dev_driver);
     dev->state = SHALE_DEVICE_STATE_INIT;
     _device_register(context, dev, id);
     //dev_driver->driver_class->events.init(dev);

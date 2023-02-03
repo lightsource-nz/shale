@@ -101,6 +101,7 @@ uint8_t shale_driver_init(driver_t *driver_obj, class_t *drv_class,
                           const uint8_t *id, message_handler_t message)
 {
     assert_class(drv_class);
+    light_object_init(&driver_obj->header, &ltype_device_driver);
     driver_obj->driver_class = shale_class_get(drv_class);
     driver_obj->events.message = message;
     uint8_t status = _driver_register(driver_obj, id);
