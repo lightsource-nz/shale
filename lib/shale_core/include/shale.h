@@ -159,7 +159,11 @@ typedef struct device_descriptor {
 
 #define Shale_Static_Device_Define(name, _id, _driver) \
         static device_t _##name; \
-        const device_descriptor_t __in_flash(".descriptors") _##name##_desc = { .object = &_##name, .id = _id, .driver = &_##_driver##_desc }; \
+        const device_descriptor_t __in_flash(".descriptors") _##name##_desc = { \
+                .object = &_##name, \
+                .id = _id, \
+                .driver = &_##_driver##_desc \
+        }; \
         const device_descriptor_t* __static_device name##_desc = &_##name##_desc; \
         Light_Device_Load(name)
 

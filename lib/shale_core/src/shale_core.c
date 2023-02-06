@@ -15,8 +15,10 @@ static void _device_instance_release(struct light_object *obj);
 struct lobj_type ltype_device_instance = {
         .release = &_device_instance_release
 };
+#define SHALE_ID_DEVICE_MANAGER "device_manager"
 static void _device_manager_release(struct light_object *obj);
 struct lobj_type ltype_device_manager = {
+        .id = SHALE_ID_DEVICE_MANAGER,
         .release = &_device_manager_release
 };
 
