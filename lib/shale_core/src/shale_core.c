@@ -230,17 +230,18 @@ uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id)
 
     return LIGHT_OK;
 }
+// desc.init_device() takes (struct device *) and upcasts to full device type internally
 uint8_t shale_device_static_add(const device_descriptor_t *desc)
 {
-        shale_device_init(desc->object, desc->driver->object, desc->id);
+        desc->driver->init_device(&desc->object, desc->id);
         desc->object->header.is_static = 1;
 }
 uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id)
 {
-    return shale_device_init_ctx(&manager_default, dev, type, dev_driver, id);
+    return shale_device_init_ctx(&manager_default, dev, dev_driver, type, id);
 }
 // TODO extract hardware-specific queueing code
-uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, struct lobj_type *type, driver_t *dev_driver, const uint8_t *id)
+uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id)
 {
     assert_class(dev_driver->driver_class);
     assert_driver(dev_driver);

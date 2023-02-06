@@ -7,12 +7,12 @@
 
 static Message_Handler(shale_class_iobus_handle_message);
 
-Shale_Static_Class_Define(class_iobus, CLASS_ID_IOBUS, shale_class_iobus_handle_message);
+Shale_Static_Class_Define(iobus, CLASS_ID_IOBUS, shale_class_iobus_handle_message);
 
-uint8_t shale_class_iobus_device_init(struct iobus_device *device, driver_t *driver, const uint8_t *id)
+uint8_t shale_class_iobus_device_init(struct iobus_device *device, driver_t *driver, struct lobj_type *type, const uint8_t *id)
 {
     // TODO verify validity of display driver
-    return shale_device_init(&device->header, driver, id);
+    return shale_device_init(&device->header, driver, type, id);
 }
 // TODO add return codes to allow message handlers to either consume messages,
 //  or delegate handling to the driver level
