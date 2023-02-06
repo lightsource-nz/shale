@@ -7,6 +7,7 @@ target_link_libraries(
     po13_test PUBLIC
     pico_platform
     shale_core
+    class_iobus
     class_display
     driver_sh1107
 )

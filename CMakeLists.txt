@@ -13,6 +13,7 @@ add_subdirectory(lib/light_util)
 
 # classes
 add_subdirectory(class/display)
+add_subdirectory(class/iobus)
 
 # drivers
 add_subdirectory(driver/sh1107)
