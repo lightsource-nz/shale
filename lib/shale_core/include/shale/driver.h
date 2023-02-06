@@ -20,13 +20,11 @@ typedef struct device_driver {
 } driver_t;
 typedef struct class_descriptor {
     class_t *object;
-    struct lobj_type type;
     const uint8_t *id;
     message_handler_t handler;
 } class_descriptor_t;
 typedef struct driver_descriptor {
     driver_t *object;
-    struct lobj_type type;
     const uint8_t *id;
     const class_descriptor_t *parent;
     message_handler_t handler;
