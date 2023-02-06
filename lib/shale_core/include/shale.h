@@ -138,6 +138,7 @@ typedef struct device {
 } device_t;
 typedef struct device_descriptor {
     device_t *object;
+    struct lobj_type type;
     const uint8_t *id;
     const driver_descriptor_t *driver;
 } device_descriptor_t;
