@@ -19,7 +19,7 @@ uint16_t sh1107_get_px_addr(device_t *device, point2_t pixel);
 
 void _sh1107_device_free(struct light_object *obj);
 static struct lobj_type lobj_type_sh1107 = (struct lobj_type) {
-
+        .release = _sh1107_device_free
 };
 
 Shale_Static_Driver_Define(driver_sh1107, DRIVER_ID_SH1107, class_display, shale_driver_sh1107_handle_message);
@@ -77,7 +77,7 @@ driver_t *shale_driver_sh1107()
 }
 void _sh1107_device_free(struct light_object *obj)
 {
-    shale_free(to_sh1107_device(obj));
+    shale_free(lobject_to_sh1107_device(obj));
 }
 
 // write a single value of up to 4 bytes to the given address. smaller values are read from

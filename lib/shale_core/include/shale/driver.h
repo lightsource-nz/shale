@@ -27,6 +27,7 @@ typedef struct driver_descriptor {
     driver_t *object;
     const uint8_t *id;
     const class_descriptor_t *parent;
+    uint8_t (*init_device)(device_t *, const uint8_t *);
     message_handler_t handler;
 } driver_descriptor_t;
 
