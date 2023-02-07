@@ -50,11 +50,11 @@ extern struct lobj_type ltype_device_driver;
 #define Light_Class_Load(name) \
         extern uint8_t static_class_count; \
         extern const class_descriptor_t *static_classes[]; \
-        void __attribute__((constructor)) _load_##name() { static_classes[static_class_count++] = name##_desc; }
+        void __attribute__((constructor)) _load_##name() { static_classes[static_class_count++] = class_##name##_desc; }
 #define Light_Driver_Load(name) \
         extern uint8_t static_driver_count; \
         extern const driver_descriptor_t *static_drivers[]; \
-        void __attribute__((constructor)) _load_##name() { static_drivers[static_driver_count++] = name##_desc; }
+        void __attribute__((constructor)) _load_##name() { static_drivers[static_driver_count++] = driver_##name##_desc; }
 #endif
 
 #define Shale_Static_Class(name) \
@@ -68,9 +68,9 @@ extern struct lobj_type ltype_device_driver;
         const class_descriptor_t __in_flash(".descriptors") _class_##name##_desc = { .object = &_class_##name, .id = _id, .handler = _handler }; \
         const class_descriptor_t* __static_class class_##name##_desc = &_class_##name##_desc; \
         Light_Class_Load(name)
-#define Shale_Static_Driver_Define(name, _id, _class, _handler) \
+#define Shale_Static_Driver_Define(name, _id, _class, _init, _handler) \
         static driver_t _driver_##name; \
-        const driver_descriptor_t __in_flash(".descriptors") _driver_##name##_desc = { .object = &_driver_##name, .parent = &_class_##_class##_desc, .id = _id, .handler = _handler }; \
+        const driver_descriptor_t __in_flash(".descriptors") _driver_##name##_desc = { .object = &_driver_##name, .parent = &_class_##_class##_desc, .id = _id, .init_device = _init, .handler = _handler }; \
         const driver_descriptor_t* __static_driver driver_##name##_desc = &_driver_##name##_desc; \
         Light_Driver_Load(name)
 

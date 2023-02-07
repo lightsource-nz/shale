@@ -233,7 +233,7 @@ uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id)
 // desc.init_device() takes (struct device *) and upcasts to full device type internally
 uint8_t shale_device_static_add(const device_descriptor_t *desc)
 {
-        desc->driver->init_device(&desc->object, desc->id);
+        desc->driver->init_device(desc->object, desc->id);
         desc->object->header.is_static = 1;
 }
 uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id)
@@ -246,7 +246,7 @@ uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t
     assert_class(dev_driver->driver_class);
     assert_driver(dev_driver);
     // TODO add assertion to verify manager
-    light_object_init(&dev->header, &ltype_device_instance);
+    light_object_init(&dev->header, type);
 #ifdef PICO_RP2040
     queue_init_with_spinlock(&dev->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
 #endif

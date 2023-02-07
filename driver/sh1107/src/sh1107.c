@@ -22,7 +22,7 @@ static struct lobj_type lobj_type_sh1107 = (struct lobj_type) {
         .release = _sh1107_device_free
 };
 
-Shale_Static_Driver_Define(sh1107, DRIVER_ID_SH1107, display, shale_driver_sh1107_handle_message);
+Shale_Static_Driver_Define(sh1107, DRIVER_ID_SH1107, display, shale_driver_sh1107_device_init, shale_driver_sh1107_handle_message);
 //driver_t *driver_sh1107;
 
 uint8_t shale_driver_sh1107_init()
