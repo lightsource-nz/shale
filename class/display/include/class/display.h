@@ -59,7 +59,7 @@ typedef struct display_driver {
 #define to_display_driver(ptr) container_of(ptr, display_driver_t, header)
 */
 
-Shale_Static_Class(class_display);
+Shale_Static_Class(display);
 
 typedef struct display_device {
     device_t header;
@@ -74,7 +74,7 @@ typedef struct display_device {
 
 class_t *shale_class_display();
 uint8_t shale_class_display_init();
-uint8_t shale_class_display_device_init(display_device_t *device, driver_t *driver, const uint8_t *id);
+uint8_t shale_class_display_device_init(display_device_t *device, driver_t *driver, struct lobj_type *type, const uint8_t *id);
 
 dimension_t shale_display_dimension_get(display_device_t *dev);
 uint8_t shale_display_channels_get(display_device_t *dev);

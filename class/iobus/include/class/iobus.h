@@ -12,7 +12,7 @@
 #define IOBUS_PROP_FRAME_SIZE       0
 #define IOBUS_PROP_BUS_PROTOCOL     1
 
-Shale_Static_Class(class_iobus);
+Shale_Static_Class(iobus);
 
 struct iobus_device {
     struct device header;
@@ -26,6 +26,7 @@ struct iobus_consumer {
 
 #define to_iobus_device(ptr) container_of(ptr, struct iobus_device, header)
 
+uint8_t shale_class_iobus_device_init(struct iobus_device *device, driver_t *driver, struct lobj_type *type, const uint8_t *id);
 class_t *shale_class_iobus();
 
 #endif

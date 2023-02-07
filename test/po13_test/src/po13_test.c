@@ -7,7 +7,7 @@
 
 #define ID_DISPLAY_MAIN "device:display.main"
 
-Shale_Static_Device_Define(display_main, ID_DISPLAY_MAIN, driver_sh1107)
+Shale_Static_Device_Define(display_main, ID_DISPLAY_MAIN, sh1107)
 
 void main()
 {
