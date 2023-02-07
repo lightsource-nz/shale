@@ -22,7 +22,7 @@ static struct lobj_type lobj_type_sh1107 = (struct lobj_type) {
         .release = _sh1107_device_free
 };
 
-Shale_Static_Driver_Define(sh1107, DRIVER_ID_SH1107, display, shale_driver_sh1107_device_init, shale_driver_sh1107_handle_message);
+Shale_Static_Driver_Define(sh1107, DRIVER_ID_SH1107, class_display, shale_driver_sh1107_device_init, shale_driver_sh1107_handle_message);
 //driver_t *driver_sh1107;
 
 uint8_t shale_driver_sh1107_init()
@@ -37,10 +37,11 @@ uint8_t shale_driver_sh1107_init()
     }
     return LIGHT_OK;
 }
-uint8_t shale_driver_sh1107_device_init(struct sh1107_device *device, const uint8_t *id)
+uint8_t shale_driver_sh1107_device_init(struct device *device, const uint8_t *id)
 {
+    struct sh1107_device *dev_sh1107 = device_to_sh1107_device(device);
     uint8_t retval;
-    if(retval = shale_class_display_device_init(&device->header, &_driver_sh1107, &lobj_type_sh1107, id)) {
+    if(retval = shale_class_display_device_init(&dev_sh1107->header, &_driver_sh1107, &lobj_type_sh1107, id)) {
         // log error
         return retval;
     }

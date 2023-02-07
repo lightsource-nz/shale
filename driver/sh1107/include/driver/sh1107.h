@@ -19,6 +19,6 @@ struct sh1107_device {
 
 uint8_t shale_driver_sh1107_init();
 driver_t *shale_driver_sh1107();
-uint8_t shale_driver_sh1107_device_init(struct sh1107_device *device, const uint8_t *id);
+uint8_t shale_driver_sh1107_device_init(struct device *device, const uint8_t *id);
 
 #endif
