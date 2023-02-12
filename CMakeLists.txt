@@ -17,6 +17,7 @@ add_subdirectory(class/iobus)
 
 # drivers
 add_subdirectory(driver/sh1107)
+add_subdirectory(driver/bus_spi)
 
 # tests
 add_subdirectory(test/po13_test)

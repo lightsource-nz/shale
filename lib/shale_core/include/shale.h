@@ -1,6 +1,8 @@
 #ifndef _SHALE_H
 #define _SHALE_H
 
+// MOOSE: Message Oriented Operating System for Embedded platforms
+
 // NOTE for simplicity, object referencing by unique string ID has
 //      been replaced by direct pointers. references may be reinstated
 //      later, or removed permanently.
