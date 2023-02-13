@@ -27,6 +27,14 @@
             "request": "launch",
             "cwd": "${workspaceRoot}/build",
             "program": "${command:cmake.launchTargetPath}"
+        },
+        {
+            "name": "native-win64-gcc-12.1.0",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceRoot}/build",
+            "miDebuggerPath": "C:/msys64/mingw64/bin/gdb.exe",
+            "program": "${command:cmake.launchTargetPath}"
         }
     ]
 }

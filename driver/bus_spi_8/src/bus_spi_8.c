@@ -1,5 +1,5 @@
-#include "driver/bus_spi.h"
-#include "driver/bus_spi_internal.h"
+#include "driver/bus_spi_8.h"
+#include "driver/bus_spi_8_internal.h"
 
 #include <stdlib.h>
 
@@ -7,19 +7,19 @@
 #   define BUS_SPI_PORT_DEFAULT 0
 #endif
 
-void _bus_spi_device_free(struct light_object *obj);
-static struct lobj_type lobj_type_bus_spi = (struct lobj_type) {
-        .release = _bus_spi_device_free
+void _bus_spi_8_device_free(struct light_object *obj);
+static struct lobj_type lobj_type_bus_spi_8 = (struct lobj_type) {
+        .release = _bus_spi_8_device_free
 };
 
-Shale_Static_Driver_Define(bus_spi, DRIVER_ID_BUS_SPI, class_iobus, shale_driver_bus_spi_device_init, shale_driver_bus_spi_handle_message);
-//driver_t *driver_bus_spi;
+Shale_Static_Driver_Define(bus_spi_8, DRIVER_ID_BUS_SPI_8, class_iobus, shale_driver_bus_spi_8_device_init, shale_driver_bus_spi_8_handle_message);
+//driver_t *driver_bus_spi_8;
 
-uint8_t shale_driver_bus_spi_device_init(struct device *device, const uint8_t *id)
+uint8_t shale_driver_bus_spi_8_device_init(struct device *device, const uint8_t *id)
 {
-    struct bus_spi_device *dev_bus_spi = device_to_bus_spi_device(device);
+    struct bus_spi_8_device *dev_bus_spi_8 = device_to_bus_spi_8_device(device);
     uint8_t retval;
-    if(retval = shale_class_iobus_device_init(&dev_bus_spi->header, &_driver_bus_spi, &lobj_type_bus_spi, id)) {
+    if(retval = shale_class_iobus_device_init(&dev_bus_spi_8->header, &_driver_bus_spi_8, &lobj_type_bus_spi_8, id)) {
         // log error
         return retval;
     }
@@ -41,9 +41,9 @@ uint8_t shale_driver_bus_spi_device_init(struct device *device, const uint8_t *i
     }
     */
 }
-Message_Handler(shale_driver_bus_spi_handle_message)
+Message_Handler(shale_driver_bus_spi_8_handle_message)
 {
-    struct bus_spi_device *sh_device = device_to_bus_spi_device(device);
+    struct bus_spi_8_device *sh_device = device_to_bus_spi_8_device(device);
     switch(handle->msg.msg_id) {
         case IOBUS_MSG_RX:
         /* TODO validate dimensions against hw */
@@ -52,11 +52,11 @@ Message_Handler(shale_driver_bus_spi_handle_message)
     // message not handled, pass to parent
     return MX_DELEGATE;
 }
-driver_t *shale_driver_bus_spi()
+driver_t *shale_driver_bus_spi_8()
 {
-    return &_driver_bus_spi;
+    return &_driver_bus_spi_8;
 }
-void _bus_spi_device_free(struct light_object *obj)
+void _bus_spi_8_device_free(struct light_object *obj)
 {
-    shale_free(lobject_to_bus_spi_device(obj));
+    shale_free(lobject_to_bus_spi_8_device(obj));
 }
