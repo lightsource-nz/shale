@@ -12,12 +12,15 @@
 #define IOBUS_PROP_FRAME_SIZE       0
 #define IOBUS_PROP_BUS_PROTOCOL     1
 
+#define IOBUS_PROTOCOL_I2C          0
+#define IOBUS_PROTOCOL_SPI          1
+
 Shale_Static_Class(iobus);
 
 struct iobus_device {
     struct device header;
-    const uint8_t frame_size;
-    const uint8_t bus_protocol;
+    uint8_t frame_size;
+    uint8_t bus_protocol;
 };
 
 struct iobus_consumer {

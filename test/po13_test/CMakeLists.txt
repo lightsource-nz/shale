@@ -10,6 +10,8 @@ target_link_libraries(
     class_iobus
     class_display
     driver_sh1107
+    driver_bus_spi_8
+    driver_bus_spi_32
 )
 shale_link_static_objects(po13_test)
 if(NOT PICO_NO_HARDWARE)
