@@ -10,6 +10,7 @@ add_subdirectory(lib/shale_core)
 add_subdirectory(lib/oled_common)
 add_subdirectory(lib/light_object)
 add_subdirectory(lib/light_util)
+add_subdirectory(lib/light_spi)
 
 # classes
 add_subdirectory(class/display)

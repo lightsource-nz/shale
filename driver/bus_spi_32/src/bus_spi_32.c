@@ -15,7 +15,6 @@ static struct lobj_type lobj_type_bus_spi_32 = (struct lobj_type) {
 };
 
 Shale_Static_Driver_Define(bus_spi_32, DRIVER_ID_BUS_SPI_32, class_iobus, shale_driver_bus_spi_32_device_init, shale_driver_bus_spi_32_handle_message);
-//driver_t *driver_bus_spi_32;
 
 uint8_t shale_driver_bus_spi_32_device_init(struct device *device_header, const uint8_t *id)
 {

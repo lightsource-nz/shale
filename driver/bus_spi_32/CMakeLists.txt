@@ -15,4 +15,5 @@ target_link_libraries(
     driver_bus_spi_32 INTERFACE
     shale_core
     class_iobus
+    light_spi
 )
