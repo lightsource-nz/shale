@@ -146,6 +146,11 @@ typedef struct device_descriptor {
     const driver_descriptor_t *driver;
 } device_descriptor_t;
 
+struct event {
+    uint16_t id;
+    struct device *source;
+};
+
 #ifdef PICO_RP2040
 #define __static_device __section(".shaledata.devices")
 #define Light_Device_Load(name)

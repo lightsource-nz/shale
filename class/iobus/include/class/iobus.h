@@ -5,10 +5,13 @@
 
 #define CLASS_ID_IOBUS      "shale.class.iobus"
 
-#define IOBUS_MSG_TX        0
-#define IOBUS_MSG_RX        1
-#define IOBUS_MSG_TXRX      2
-
+enum iobus_msg {
+        IOBUS_MSG_ATTACH = 0,
+        IOBUS_MSG_DETACH,
+        IOBUS_MSG_TX,
+        IOBUS_MSG_RX,
+        IOBUS_MSG_TXRX
+};
 #define IOBUS_PROP_FRAME_SIZE       0
 #define IOBUS_PROP_BUS_PROTOCOL     1
 
@@ -18,13 +21,15 @@
 Shale_Static_Class(iobus);
 
 struct iobus_device {
-    struct device header;
-    uint8_t frame_size;
-    uint8_t bus_protocol;
+        struct device header;
+        uint8_t frame_size;
+        uint8_t bus_protocol;
+        struct iobus_consumer *consumer;
 };
 
 struct iobus_consumer {
-    struct iobus *target;
+        struct iobus_device *target;
+        void (*consume)(struct event *);
 };
 
 #define to_iobus_device(ptr) container_of(ptr, struct iobus_device, header)

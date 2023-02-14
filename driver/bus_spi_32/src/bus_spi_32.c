@@ -7,7 +7,7 @@
 #   define BUS_SPI_PORT_DEFAULT 0
 #endif
 
-#define BUS_SPI_32_FRAME_SIZE   32
+#define BUS_SPI_32_FRAME_SIZE   4
 
 void _bus_spi_32_device_free(struct light_object *obj);
 static struct lobj_type lobj_type_bus_spi_32 = (struct lobj_type) {
@@ -22,7 +22,7 @@ uint8_t shale_driver_bus_spi_32_device_init(struct device *device_header, const 
     struct bus_spi_32_device *device = device_to_bus_spi_32_device(device_header);
     uint8_t retval;
     if(retval = shale_class_iobus_device_init(&device->header, &_driver_bus_spi_32, &lobj_type_bus_spi_32, id)) {
-        // log error
+        light_warn("failed to init device, error code %s", light_error_to_string(retval));
         return retval;
     }
     device->header.bus_protocol = IOBUS_PROTOCOL_SPI;

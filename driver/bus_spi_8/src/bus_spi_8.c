@@ -7,6 +7,8 @@
 #   define BUS_SPI_PORT_DEFAULT 0
 #endif
 
+#define BUS_SPI_8_FRAME_SIZE    1
+
 void _bus_spi_8_device_free(struct light_object *obj);
 static struct lobj_type lobj_type_bus_spi_8 = (struct lobj_type) {
         .release = _bus_spi_8_device_free
@@ -15,14 +17,16 @@ static struct lobj_type lobj_type_bus_spi_8 = (struct lobj_type) {
 Shale_Static_Driver_Define(bus_spi_8, DRIVER_ID_BUS_SPI_8, class_iobus, shale_driver_bus_spi_8_device_init, shale_driver_bus_spi_8_handle_message);
 //driver_t *driver_bus_spi_8;
 
-uint8_t shale_driver_bus_spi_8_device_init(struct device *device, const uint8_t *id)
+uint8_t shale_driver_bus_spi_8_device_init(struct device *device_header, const uint8_t *id)
 {
-    struct bus_spi_8_device *dev_bus_spi_8 = device_to_bus_spi_8_device(device);
+    struct bus_spi_8_device *device = device_to_bus_spi_8_device(device_header);
     uint8_t retval;
-    if(retval = shale_class_iobus_device_init(&dev_bus_spi_8->header, &_driver_bus_spi_8, &lobj_type_bus_spi_8, id)) {
-        // log error
+    if(retval = shale_class_iobus_device_init(&device->header, &_driver_bus_spi_8, &lobj_type_bus_spi_8, id)) {
+        light_warn("failed to init device, error code %s", light_error_to_string(retval));
         return retval;
     }
+    device->header.bus_protocol = IOBUS_PROTOCOL_SPI;
+    device->header.frame_size = BUS_SPI_8_FRAME_SIZE;
     /*
     device->port.port_type = SH1107_PORT_TYPE_DEFAULT;
     switch(device->port.port_type) {
