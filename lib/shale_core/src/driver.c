@@ -23,14 +23,12 @@ struct lobj_type ltype_device_driver = {
         .release = &_device_driver_release
 };
 
-static struct class_table {
-        struct light_object header;
-        uint8_t count;
-        class_t *classes[SHALE_MAX_CLASSES];
-} class_table_global;
+static struct class_table class_table_global;
 
-#define to_class_table(ptr) container_of(ptr, struct class_table, header)
-
+struct class_table *shale_class_table_main_get()
+{
+        return &class_table_global;
+}
 static void _class_table_child_add(struct light_object *obj, struct light_object *child)
 {
     struct class_table *ctable = to_class_table(obj);

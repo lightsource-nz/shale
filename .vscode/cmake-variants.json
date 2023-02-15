@@ -8,7 +8,7 @@
                 "buildType": "Debug",
                 "settings": {
                     "PICO_PLATFORM": "rp2040",
-                    "COMPILE_LOG_LEVEL": "DEBUG"
+                    "LIGHT_RUN_MODE": "DEBUG"
                 }
             },
             "debug-host": {
@@ -17,7 +17,7 @@
                 "buildType": "Debug",
                 "settings": {
                     "PICO_PLATFORM": "host",
-                    "COMPILE_LOG_LEVEL": "DEBUG"
+                    "LIGHT_RUN_MODE": "DEBUG"
                 }
             },
             "trace-host": {
@@ -26,7 +26,7 @@
                 "buildType": "Debug",
                 "settings": {
                     "PICO_PLATFORM": "host",
-                    "COMPILE_LOG_LEVEL": "TRACE"
+                    "LIGHT_RUN_MODE": "TRACE"
                 }
             },
             "release": {
@@ -35,7 +35,7 @@
                 "buildType": "Release",
                 "settings": {
                     "PICO_PLATFORM": "rp2040",
-                    "COMPILE_LOG_LEVEL": "INFO"
+                    "LIGHT_RUN_MODE": "PRODUCTION"
                 }
             }
         }

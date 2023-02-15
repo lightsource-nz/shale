@@ -128,23 +128,62 @@ static void _device_manager_release(struct light_object *obj)
 {
     free(to_device_manager(obj));
 }
+#define SHALE_DESCRIBE_BUFFER_LENGTH 128
+static uint8_t _describe_buffer[SHALE_DESCRIBE_BUFFER_LENGTH];
+uint8_t *shale_class_describe(const struct device_class *_class)
+{
+        snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
+                "device class, id=%s", _class->header.id);
+        return _describe_buffer;
+}
+uint8_t *shale_driver_describe(const struct device_driver *driver)
+{
+        snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
+                "device driver, id=%s, class=%s", driver->header.id, driver->driver_class->header.id);
+        return _describe_buffer;
+}
+uint8_t *shale_device_describe(const struct device *device)
+{
+        snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
+                "device, id=%s, class=%s, driver=%s", device->header.id,
+                device->driver->header.id, device->driver->driver_class->header.id);
+        return _describe_buffer;
+}
 
 uint8_t shale_init()
 {
-    light_info("Loading SHALE v%s...",SHALE_VERSION_STR);
-    uint8_t retval;
-    light_object_setup();
-    shale_thread_init();
+        light_info("Loading SHALE v%s...",SHALE_VERSION_STR);
+        uint8_t retval;
+        light_object_setup();
+        shale_thread_init();
     
-    if(retval = shale_device_manager_init(&manager_default, SHALE_MANAGER_DEFAULT_NAME)) {
-        // TODO log error
-        return retval;
-    }
-    shale_load_static_classes();
-    shale_load_static_drivers();
-    shale_load_static_devices();
+        if(retval = shale_device_manager_init(&manager_default, SHALE_MANAGER_DEFAULT_NAME)) {
+                // TODO log error
+                return retval;
+        }
+        shale_load_static_classes();
+        shale_load_static_drivers();
+        shale_load_static_devices();
 
+        struct class_table *ctable = shale_class_table_main_get();
+        for(uint8_t i = 0; i < ctable->count; i++) {
+                struct device_class *_class = ctable->classes[i];
+                light_debug("[%s]", shale_class_describe(_class));
+                for(uint8_t j = 0; j < _class->driver_count; j++) {
+                        light_debug("[%s]", shale_driver_describe(_class->drivers[j]));
+                }
+        }
+        
+        struct device_manager *devman = shale_device_manager_default();
+        for(uint8_t i = 0; i < devman->device_count; i++) {
+                light_debug("[%s]",shale_device_describe(devman->device_table[i]));
+        }
     return LIGHT_OK;
+}
+
+struct device_manager *shale_device_manager_default()
+{
+    return &manager_default;
 }
 #define SERVICE_COUNT_INF UINT16_MAX
 void shale_service_message_queues()

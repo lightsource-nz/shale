@@ -194,6 +194,10 @@ typedef struct device_manager {
 
 uint8_t shale_init();
 
+extern uint8_t *shale_class_describe(const struct device_class *_class);
+extern uint8_t *shale_driver_describe(const struct device_driver *driver);
+extern uint8_t *shale_device_describe(const struct device *device);
+
 extern uint8_t shale_device_static_add(const device_descriptor_t *desc);
 uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id);
 uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id);
@@ -201,6 +205,7 @@ uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t
 bool shale_device_message_pending(device_t *device);
 message_handle_t *shale_device_message_get_next(device_t *device);
 
+struct device_manager *shale_device_manager_default();
 void shale_service_message_queues();
 void shale_service_message_queues_n(uint16_t count);
 void shale_device_manager_service_message_queues(device_manager_t *context);

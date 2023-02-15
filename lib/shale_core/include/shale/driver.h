@@ -31,6 +31,13 @@ typedef struct driver_descriptor {
     message_handler_t handler;
 } driver_descriptor_t;
 
+struct class_table {
+        struct light_object header;
+        uint8_t count;
+        class_t *classes[SHALE_MAX_CLASSES];
+};
+#define to_class_table(ptr) container_of(ptr, struct class_table, header)
+
 extern struct lobj_type ltype_device_class;
 extern struct lobj_type ltype_device_driver;
 #define LTYPE_DEVICE_CLASS_NAME "device_class"
@@ -75,6 +82,7 @@ extern struct lobj_type ltype_device_driver;
         Light_Driver_Load(name)
 
 extern void shale_class_setup();
+extern struct class_table *shale_class_table_main_get();
 extern uint8_t shale_class_static_add(const class_descriptor_t *desc);
 extern uint8_t shale_driver_static_add(const driver_descriptor_t *desc);
 extern uint8_t shale_class_init(class_t *_class, const uint8_t *id, message_handler_t handler);
