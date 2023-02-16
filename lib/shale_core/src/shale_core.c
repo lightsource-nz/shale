@@ -156,7 +156,8 @@ uint8_t shale_init()
         uint8_t retval;
         light_object_setup();
         shale_thread_init();
-    
+        shale_class_setup();
+
         if(retval = shale_device_manager_init(&manager_default, SHALE_MANAGER_DEFAULT_NAME)) {
                 // TODO log error
                 return retval;
