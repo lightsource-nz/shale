@@ -276,6 +276,20 @@ uint8_t shale_device_static_add(const device_descriptor_t *desc)
         desc->driver->init_device(desc->object, desc->id);
         desc->object->header.is_static = 1;
 }
+// drivers must implement the ADD hook to do further initialization,
+// which is not ideal but it works
+device_t *shale_device_new(driver_t *driver, uint8_t *id)
+{
+        return shale_device_new_ctx(&manager_default, driver, id);
+}
+device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, uint8_t *id)
+{
+        struct device *device = driver->device_alloc();
+        light_object_init(&device->header, driver->device_type);
+        device->driver = shale_driver_get(driver);
+        light_object_add(&device->header, &ctx->header, "%s", id);
+        return device;
+}
 uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id)
 {
     return shale_device_init_ctx(&manager_default, dev, dev_driver, type, id);
