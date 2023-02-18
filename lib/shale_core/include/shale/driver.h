@@ -1,36 +1,36 @@
 #ifndef _SHALE_DRIVER_H
 #define _SHALE_DRIVER_H
 
-typedef uint8_t (*message_handler_t)(device_t *, message_handle_t *);
-
-typedef struct handler_block {
-    message_handler_t message;
-} handler_block_t;
+typedef struct device_event {
+        uint8_t (*init)(struct device *);
+        uint8_t (*add)(struct device *);
+        uint8_t (*message)(struct device *, struct message_handle *);
+};
 
 typedef struct device_class {
     struct light_object header;
-    handler_block_t events;
+    struct device_event events;
     uint8_t driver_count;
     driver_t *drivers[SHALE_CLASS_MAX_DRIVERS];
 } class_t;
 typedef struct device_driver {
     struct light_object header;
     class_t *driver_class;
-    handler_block_t events;
     struct lobj_type *device_type;
     struct device *(*device_alloc)();
+    struct device_event events;
 } driver_t;
 typedef struct class_descriptor {
     class_t *object;
     const uint8_t *id;
-    message_handler_t handler;
+    struct device_event events;
 } class_descriptor_t;
 typedef struct driver_descriptor {
     driver_t *object;
     const uint8_t *id;
     const class_descriptor_t *parent;
     uint8_t (*init_device)(struct device*, const uint8_t *);
-    message_handler_t handler;
+    struct device_event handler;
 } driver_descriptor_t;
 
 struct class_table {
