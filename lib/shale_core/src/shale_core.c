@@ -291,7 +291,7 @@ device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const ui
                 // it is safe to free the device memory directly here,
                 // since it was not added to the object hierarchy
                 light_free(device);
-            return retval;
+                return NULL;
         }
         return device;
 }
