@@ -125,19 +125,19 @@ static uint8_t _describe_buffer[SHALE_DESCRIBE_BUFFER_LENGTH];
 uint8_t *shale_class_describe(const struct device_class *_class)
 {
         snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
-                "device class, id=%s", _class->header.id);
+                "CLASS: id=%s", _class->header.id);
         return _describe_buffer;
 }
 uint8_t *shale_driver_describe(const struct device_driver *driver)
 {
         snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
-                "device driver, id=%s, class=%s", driver->header.id, driver->driver_class->header.id);
+                "DRIVER: id=%s, class=%s", driver->header.id, driver->driver_class->header.id);
         return _describe_buffer;
 }
 uint8_t *shale_device_describe(const struct device *device)
 {
         snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
-                "device, id=%s, class=%s, driver=%s", device->header.id,
+                "DEVICE: id=%s, class=%s, driver=%s", device->header.id,
                 device->driver->header.id, device->driver->driver_class->header.id);
         return _describe_buffer;
 }
