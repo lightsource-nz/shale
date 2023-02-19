@@ -21,6 +21,5 @@ struct bus_spi_8_device {
 #define lobject_to_bus_spi_8_device(ptr) device_to_bus_spi_8_device(to_device_instance(ptr))
 
 driver_t *shale_driver_bus_spi_8();
-uint8_t shale_driver_bus_spi_8_device_init(struct device *device, const uint8_t *id);
 
 #endif

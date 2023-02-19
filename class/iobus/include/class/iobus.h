@@ -33,6 +33,7 @@ struct iobus_consumer {
 };
 
 #define to_iobus_device(ptr) container_of(ptr, struct iobus_device, header)
+#define lobject_to_iobus_device(ptr) to_iobus_device(to_device_instance(ptr))
 
 uint8_t shale_class_iobus_device_init(struct iobus_device *device, driver_t *driver, struct lobj_type *type, const uint8_t *id);
 class_t *shale_class_iobus();
