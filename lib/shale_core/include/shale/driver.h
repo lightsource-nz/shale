@@ -1,7 +1,7 @@
 #ifndef _SHALE_DRIVER_H
 #define _SHALE_DRIVER_H
 
-typedef struct device_event {
+struct device_event {
         uint8_t (*init)(struct device *);
         uint8_t (*add)(struct device *);
         uint8_t (*message)(struct device *, struct message_handle *);
@@ -29,8 +29,8 @@ typedef struct driver_descriptor {
     driver_t *object;
     const uint8_t *id;
     const class_descriptor_t *parent;
-    uint8_t (*init_device)(struct device*, const uint8_t *);
-    struct device_event handler;
+    struct device *(*device_alloc)();
+    struct device_event events;
 } driver_descriptor_t;
 
 struct class_table {
@@ -72,14 +72,14 @@ extern struct lobj_type ltype_device_driver;
         extern const driver_descriptor_t _driver_##name##_desc
 //#define Shale_Static_Device(name) device_t* __section(".shaledata.devices") _##name = &name
 
-#define Shale_Static_Class_Define(name, _id, _handler) \
+#define Shale_Static_Class_Define(name, _id, _events) \
         static class_t _class_##name; \
-        const class_descriptor_t __in_flash(".descriptors") _class_##name##_desc = { .object = &_class_##name, .id = _id, .handler = _handler }; \
+        const class_descriptor_t __in_flash(".descriptors") _class_##name##_desc = { .object = &_class_##name, .id = _id, .events = _events }; \
         const class_descriptor_t* __static_class class_##name##_desc = &_class_##name##_desc; \
         Light_Class_Load(name)
-#define Shale_Static_Driver_Define(name, _id, _class, _init, _handler) \
+#define Shale_Static_Driver_Define(name, _id, _class, _alloc, _events) \
         static driver_t _driver_##name; \
-        const driver_descriptor_t __in_flash(".descriptors") _driver_##name##_desc = { .object = &_driver_##name, .parent = &_##_class##_desc, .id = _id, .init_device = _init, .handler = _handler }; \
+        const driver_descriptor_t __in_flash(".descriptors") _driver_##name##_desc = { .object = &_driver_##name, .parent = &_##_class##_desc, .id = _id, .device_alloc = _alloc, .events = _events }; \
         const driver_descriptor_t* __static_driver driver_##name##_desc = &_driver_##name##_desc; \
         Light_Driver_Load(name)
 
@@ -87,9 +87,11 @@ extern void shale_class_setup();
 extern struct class_table *shale_class_table_main_get();
 extern uint8_t shale_class_static_add(const class_descriptor_t *desc);
 extern uint8_t shale_driver_static_add(const driver_descriptor_t *desc);
-extern uint8_t shale_class_init(class_t *_class, const uint8_t *id, message_handler_t handler);
-extern uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id, message_handler_t handler);
-
+extern uint8_t shale_class_init(class_t *_class, const uint8_t *id, struct device_event events);
+extern uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id, struct device_event events);
+extern class_t *shale_class_find(uint8_t *id);
+extern class_t *shale_class_find_ctx(struct class_table *ctx, uint8_t *id);
+extern driver_t *shale_driver_find(class_t *_class, uint8_t *id);
 static inline class_t *shale_class_get(class_t *_class)
 {
     return to_device_class(light_object_get(&_class->header));

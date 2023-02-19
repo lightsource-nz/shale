@@ -22,21 +22,19 @@ static struct lobj_type lobj_type_sh1107 = (struct lobj_type) {
         .release = _sh1107_device_free
 };
 
-Shale_Static_Driver_Define(sh1107, DRIVER_ID_SH1107, class_display, shale_driver_sh1107_device_init, shale_driver_sh1107_handle_message);
+static device_t *_sh1107_device_alloc();
+static uint8_t _sh1107_init(device_t *device);
+static uint8_t _sh1107_add(device_t *device);
+static uint8_t _sh1107_msg(device_t *device, message_handle_t *handle);
+static const struct device_event _sh1107_event = {
+        .init = _sh1107_init,
+        .add = _sh1107_add,
+        .message = _sh1107_msg
+};
+
+Shale_Static_Driver_Define(sh1107, DRIVER_ID_SH1107, class_display, _sh1107_device_alloc, _sh1107_event);
 //driver_t *driver_sh1107;
 
-uint8_t shale_driver_sh1107_init()
-{
-    class_t *driver_class = shale_class_display();
-    assert_class(driver_class);
-    uint8_t retval;
-    if(retval = shale_driver_init(&_driver_sh1107, driver_class, DRIVER_ID_SH1107,
-                                  &shale_driver_sh1107_handle_message)) {
-        // log error
-        return retval;
-    }
-    return LIGHT_OK;
-}
 uint8_t shale_driver_sh1107_device_init(struct device *device, const uint8_t *id)
 {
     struct sh1107_device *dev_sh1107 = device_to_sh1107_device(device);
@@ -92,4 +90,28 @@ void sh1107_device_write(struct sh1107_device *device, uint16_t write_addr, size
 uint16_t sh1107_get_px_addr(device_t *device, point2_t pixel)
 {
 
+}
+
+static device_t *_sh1107_device_alloc()
+{
+        struct sh1107_device *device = shale_malloc(sizeof(struct sh1107_device));
+        return &device->header.header;
+}
+static uint8_t _sh1107_init(device_t *device_header)
+{
+        struct sh1107_device *device = device_to_sh1107_device(device_header);
+
+        return LIGHT_OK;
+}
+static uint8_t _sh1107_add(device_t *device_header)
+{
+        struct sh1107_device *device = device_to_sh1107_device(device_header);
+
+        return LIGHT_OK;
+}
+static uint8_t _sh1107_msg(device_t *device_header, message_handle_t *handle)
+{
+        struct sh1107_device *device = device_to_sh1107_device(device_header);
+
+        return LIGHT_OK;
 }

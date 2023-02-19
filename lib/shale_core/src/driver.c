@@ -56,18 +56,18 @@ void shale_class_setup()
 }
 uint8_t shale_class_static_add(const class_descriptor_t *desc)
 {
-        shale_class_init(desc->object, desc->id, desc->handler);
+        shale_class_init(desc->object, desc->id, desc->events);
         desc->object->header.is_static = 1;
 }
 uint8_t shale_driver_static_add(const driver_descriptor_t *desc)
 {
-        shale_driver_init(desc->object, desc->parent->object, desc->id, desc->handler);
+        shale_driver_init(desc->object, desc->parent->object, desc->id, desc->events);
         desc->object->header.is_static = 1;
 }
-uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, message_handler_t message)
+uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, struct device_event events)
 {
     light_object_init(&class_obj->header, &ltype_device_class);
-    class_obj->events.message = message;
+    class_obj->events = events;
     uint8_t status = _class_register(class_obj, id);
     if(status) {
         //TODO log error
@@ -96,12 +96,12 @@ uint8_t _class_add_driver(class_t *_class, driver_t *driver, const uint8_t *id)
     return SHALE_SUCCESS;
 }
 uint8_t shale_driver_init(driver_t *driver_obj, class_t *drv_class,
-                          const uint8_t *id, message_handler_t message)
+                          const uint8_t *id, struct device_event events)
 {
     assert_class(drv_class);
     light_object_init(&driver_obj->header, &ltype_device_driver);
     driver_obj->driver_class = shale_class_get(drv_class);
-    driver_obj->events.message = message;
+    driver_obj->events = events;
     uint8_t status = _driver_register(driver_obj, id);
     if(status) {
         //TODO log error
@@ -115,7 +115,28 @@ uint8_t _driver_register(driver_t *driver, const uint8_t *id)
 {
     return _class_add_driver(driver->driver_class, driver, id);
 }
-
+class_t *shale_class_find(uint8_t *id)
+{
+        return shale_class_find_ctx(&class_table_global, id);
+}
+class_t *shale_class_find_ctx(struct class_table *ctx, uint8_t *id)
+{
+        for(uint8_t i = 0; i < ctx->count; i++) {
+                if(strcmp(ctx->classes[i], id)) {
+                        return ctx->classes[i];
+                }
+        }
+        return NULL;
+}
+driver_t *shale_driver_find(class_t *_class, uint8_t *id)
+{
+        for(uint8_t i = 0; i < _class->driver_count; i++) {
+                if(strcmp(_class->drivers[i], id)) {
+                        return _class->drivers[i];
+                }
+        }
+        return NULL;
+}
 void shale_class_deliver_message(class_t *target, device_t *device, message_handle_t *msg)
 {
     target->events.message(device, msg);

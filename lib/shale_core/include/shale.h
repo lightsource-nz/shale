@@ -124,9 +124,6 @@ typedef struct message message_t;
 #include "shale/thread.h"
 #include "shale/driver.h"
 
-extern struct lobj_type ltype_device_instance;
-
-#define LTYPE_DEVICE_INSTANCE_NAME "device_instance"
 #define to_device_instance(object) container_of(object, device_t, header)
 
 // TODO provide a platform agnostic message queueing interface which also
@@ -141,7 +138,6 @@ typedef struct device {
 } device_t;
 typedef struct device_descriptor {
     device_t *object;
-    struct lobj_type type;
     const uint8_t *id;
     const driver_descriptor_t *driver;
 } device_descriptor_t;
@@ -200,10 +196,20 @@ extern uint8_t *shale_device_describe(const struct device *device);
 
 extern uint8_t shale_device_static_add(const device_descriptor_t *desc);
 uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id);
-device_t *shale_device_new(driver_t *driver, uint8_t *id);
-device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, uint8_t *id);
+device_t *shale_device_new(driver_t *driver, const uint8_t *id);
+device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const uint8_t *id);
 uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id);
 uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id);
+device_t *shale_device_find(const uint8_t *id);
+device_t *shale_device_find_ctx(device_manager_t *ctx, const uint8_t *id);
+static inline device_t *shale_device_get(device_t *device)
+{
+        return to_device_instance(light_object_get(&device->header));
+}
+static inline void shale_device_put(device_t *device)
+{
+        light_object_put(&device->header);
+}
 bool shale_device_message_pending(device_t *device);
 message_handle_t *shale_device_message_get_next(device_t *device);
 
