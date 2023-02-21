@@ -29,9 +29,9 @@ typedef struct driver_descriptor {
     driver_t *object;
     const uint8_t *id;
     const class_descriptor_t *parent;
-    struct lobj_type *device_type;
+    const struct lobj_type *device_type;
     struct device *(*device_alloc)();
-    struct device_event events;
+    const struct device_event events;
 } driver_descriptor_t;
 
 struct class_table {
@@ -89,7 +89,9 @@ extern struct class_table *shale_class_table_main_get();
 extern uint8_t shale_class_static_add(const class_descriptor_t *desc);
 extern uint8_t shale_driver_static_add(const driver_descriptor_t *desc);
 extern uint8_t shale_class_init(class_t *_class, const uint8_t *id, struct device_event events);
-extern uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id, struct device_event events);
+extern uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id,
+                                    const struct lobj_type *dev_type,
+                                    struct device *(*device_alloc)(), struct device_event events);
 extern class_t *shale_class_find(uint8_t *id);
 extern class_t *shale_class_find_ctx(struct class_table *ctx, uint8_t *id);
 extern driver_t *shale_driver_find(class_t *_class, uint8_t *id);
