@@ -330,7 +330,8 @@ uint8_t _device_manager_add(device_manager_t *context, device_t *device, const u
         // TODO verify that device id is unique for this DM
         int retval;
         if(retval = light_object_add(&device->header, &context->header, "%s", id)) {
-                light_debug("failed to add device with id '%s' to device manager '%s'", id, context->header.id);
+                light_debug("failed to add device with id '%s' to device manager '%s' (%s)",
+                                        id, context->header.id, light_error_to_string(retval));
                 return retval;
         }
         context->device_table[context->device_count++] = device;
