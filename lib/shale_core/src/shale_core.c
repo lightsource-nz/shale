@@ -163,7 +163,7 @@ uint8_t shale_init()
                 struct device_class *_class = ctable->classes[i];
                 light_debug("[%s]", shale_class_describe(_class));
                 for(uint8_t j = 0; j < _class->driver_count; j++) {
-                        light_debug("[%s]", shale_driver_describe(_class->drivers[j]));
+                        light_debug("+--[%s]", shale_driver_describe(_class->drivers[j]));
                 }
         }
         
