@@ -329,7 +329,7 @@ uint8_t _device_manager_add(device_manager_t *context, device_t *device, const u
                 return ERROR_MAX_ENTITIES;
         // TODO verify that device id is unique for this DM
         int retval;
-        if(!(retval = light_object_add(&device->header, &context->header, "%s", id))) {
+        if(retval = light_object_add(&device->header, &context->header, "%s", id)) {
                 light_debug("failed to add device with id '%s' to device manager '%s'", id, context->header.id);
                 return retval;
         }
