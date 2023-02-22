@@ -315,7 +315,8 @@ uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t
     //dev_driver->driver_class->events.init(dev);
     //dev_driver->events.init(dev);
     return LIGHT_OK;
-}device_t *shale_device_find(const uint8_t *id)
+}
+device_t *shale_device_find(const uint8_t *id)
 {
         return shale_device_find_ctx(&manager_default, id);
 }

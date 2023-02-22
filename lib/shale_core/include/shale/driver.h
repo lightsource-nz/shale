@@ -16,7 +16,7 @@ typedef struct device_class {
 typedef struct device_driver {
     struct light_object header;
     class_t *driver_class;
-    struct lobj_type *device_type;
+    const struct lobj_type *device_type;
     struct device *(*device_alloc)();
     struct device_event events;
 } driver_t;
