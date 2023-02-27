@@ -111,7 +111,18 @@ static inline void shale_driver_put(driver_t *driver)
 {
     light_object_put(&driver->header);
 }
-
+static inline const uint8_t *shale_class_name(class_t *_class)
+{
+        return light_object_get_name(&_class->header);
+}
+static inline const uint8_t *shale_driver_name(driver_t *driver)
+{
+        return light_object_get_name(&driver->header);
+}
+static inline class_t *shale_driver_class(driver_t *driver)
+{
+        return driver->driver_class;
+}
 extern void shale_class_deliver_message(class_t *target, device_t *device, message_handle_t *msg);
 extern void shale_driver_deliver_message(driver_t *target, device_t *device, message_handle_t *msg);
 #endif

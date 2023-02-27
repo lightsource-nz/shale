@@ -122,23 +122,24 @@ static void _device_manager_release(struct light_object *obj)
 }
 #define SHALE_DESCRIBE_BUFFER_LENGTH 128
 static uint8_t _describe_buffer[SHALE_DESCRIBE_BUFFER_LENGTH];
-uint8_t *shale_class_describe(const struct device_class *_class)
+uint8_t *shale_class_describe(struct device_class *_class)
 {
         snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
-                "CLASS: id=%s", _class->header.id);
+                "CLASS: id=%s", shale_class_name(_class));
         return _describe_buffer;
 }
-uint8_t *shale_driver_describe(const struct device_driver *driver)
+uint8_t *shale_driver_describe(struct device_driver *driver)
 {
         snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
-                "DRIVER: id=%s, class=%s", driver->header.id, driver->driver_class->header.id);
+                "DRIVER: id=%s, class=%s", shale_driver_name(driver),
+                                        shale_class_name(driver->driver_class));
         return _describe_buffer;
 }
-uint8_t *shale_device_describe(const struct device *device)
+uint8_t *shale_device_describe(struct device *device)
 {
         snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
-                "DEVICE: id=%s, class=%s, driver=%s", device->header.id,
-                device->driver->driver_class->header.id, device->driver->header.id);
+                "DEVICE: id=%s, class=%s, driver=%s", shale_device_name(device),
+                shale_class_name(device->driver->driver_class), shale_driver_name(device->driver));
         return _describe_buffer;
 }
 

@@ -190,9 +190,9 @@ typedef struct device_manager {
 
 uint8_t shale_init();
 
-extern uint8_t *shale_class_describe(const struct device_class *_class);
-extern uint8_t *shale_driver_describe(const struct device_driver *driver);
-extern uint8_t *shale_device_describe(const struct device *device);
+extern uint8_t *shale_class_describe(struct device_class *_class);
+extern uint8_t *shale_driver_describe(struct device_driver *driver);
+extern uint8_t *shale_device_describe(struct device *device);
 
 extern uint8_t shale_device_static_add(const device_descriptor_t *desc);
 uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id);
@@ -209,6 +209,11 @@ static inline device_t *shale_device_get(device_t *device)
 static inline void shale_device_put(device_t *device)
 {
         light_object_put(&device->header);
+}
+
+static inline const uint8_t *shale_device_name(device_t *device)
+{
+        return light_object_get_name(&device->header);
 }
 bool shale_device_message_pending(device_t *device);
 message_handle_t *shale_device_message_get_next(device_t *device);
