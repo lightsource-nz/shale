@@ -138,7 +138,7 @@ uint8_t *shale_device_describe(const struct device *device)
 {
         snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
                 "DEVICE: id=%s, class=%s, driver=%s", device->header.id,
-                device->driver->header.id, device->driver->driver_class->header.id);
+                device->driver->driver_class->header.id, device->driver->header.id);
         return _describe_buffer;
 }
 
