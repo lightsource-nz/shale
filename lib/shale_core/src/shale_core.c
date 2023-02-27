@@ -265,14 +265,31 @@ uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id)
 }
 uint8_t shale_device_static_add(const device_descriptor_t *desc)
 {
-        shale_device_new(desc->driver->object, desc->id);
+        shale_device_new(desc->driver->object, "%s", desc->id);
         desc->object->header.is_static = 1;
 }
-device_t *shale_device_new(driver_t *driver, const uint8_t *id)
+device_t *shale_device_new(driver_t *driver, const uint8_t *id_format, ...)
 {
-        return shale_device_new_ctx(&manager_default, driver, id);
+        va_list vargs;
+
+        va_start(vargs, id_format);
+        return shale_device_new_va(driver, id_format, vargs);
+        va_end(vargs);
 }
-device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const uint8_t *id)
+device_t *shale_device_new_va(driver_t *driver, const uint8_t *id_format, va_list vargs)
+{
+        return shale_device_new_ctx_va(&manager_default, driver, id_format, vargs);
+}
+device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, ...)
+{
+
+        va_list vargs;
+
+        va_start(vargs, id_format);
+        return shale_device_new_ctx_va(ctx, driver, id_format, vargs);
+        va_end(vargs);
+}
+device_t *shale_device_new_ctx_va(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, va_list vargs)
 {
         struct device *device = driver->device_alloc();
         light_object_init(&device->header, driver->device_type);
@@ -281,41 +298,23 @@ device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const ui
 #endif
         device->driver = shale_driver_get(driver);
         device->state = SHALE_DEVICE_STATE_INIT;
-        driver->driver_class->events.init(device);
-        driver->events.init(device);
         uint8_t retval;
-        if(retval = _device_manager_add(ctx, device, id)) {
-                light_warn("failed to create new device '%s' at context '%s", id, ctx->header.id);
+        if(retval = _device_manager_add(ctx, device, id_format, vargs)) {
+                light_warn("failed to create new device '%s' at context '%s", id_format, ctx->header.id);
 #ifdef PICO_RP2040
                 queue_free(&device->queue);
 #endif
+                shale_driver_put(driver);
                 // it is safe to free the device memory directly here,
                 // since it was not added to the object hierarchy
+                // FIXME this needs to be a device type-specific free function or it will crash or leak
                 light_free(device);
                 return NULL;
         }
+        driver->driver_class->events.init(device);
+        driver->events.init(device);
+        device->state = SHALE_DEVICE_STATE_ACTIVE;
         return device;
-}
-uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id)
-{
-    return shale_device_init_ctx(&manager_default, dev, dev_driver, type, id);
-}
-// TODO extract hardware-specific queueing code
-uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id)
-{
-    assert_class(dev_driver->driver_class);
-    assert_driver(dev_driver);
-    // TODO add assertion to verify manager
-    light_object_init(&dev->header, type);
-#ifdef PICO_RP2040
-    queue_init_with_spinlock(&dev->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, context->mq_lock);
-#endif
-    dev->driver = shale_driver_get(dev_driver);
-    dev->state = SHALE_DEVICE_STATE_INIT;
-    _device_manager_add(context, dev, id);
-    //dev_driver->driver_class->events.init(dev);
-    //dev_driver->events.init(dev);
-    return LIGHT_OK;
 }
 device_t *shale_device_find(const uint8_t *id)
 {
@@ -325,15 +324,15 @@ device_t *shale_device_find_ctx(device_manager_t *ctx, const uint8_t *id)
 {
         return _device_lookup(ctx, id);
 }
-uint8_t _device_manager_add(device_manager_t *context, device_t *device, const uint8_t *id)
+uint8_t _device_manager_add(device_manager_t *context, device_t *device, const uint8_t *id_format, va_list vargs)
 {
         if(context->device_count >= SHALE_MANAGER_MAX_DEVICES)
                 return ERROR_MAX_ENTITIES;
         // TODO verify that device id is unique for this DM
         int retval;
-        if(retval = light_object_add(&device->header, &context->header, "%s", id)) {
-                light_debug("failed to add device with id '%s' to device manager '%s' (%s)",
-                                        id, context->header.id, light_error_to_string(retval));
+        if(retval = light_object_add_va(&device->header, &context->header, id_format, vargs)) {
+                light_debug("failed to add device with id pattern '%s' to device manager '%s' (%s)",
+                                        id_format, context->header.id, light_error_to_string(retval));
                 return retval;
         }
         context->device_table[context->device_count++] = device;

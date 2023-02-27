@@ -196,10 +196,10 @@ extern uint8_t *shale_device_describe(struct device *device);
 
 extern uint8_t shale_device_static_add(const device_descriptor_t *desc);
 uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id);
-device_t *shale_device_new(driver_t *driver, const uint8_t *id);
-device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const uint8_t *id);
-uint8_t shale_device_init(device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id);
-uint8_t shale_device_init_ctx(device_manager_t *context, device_t *dev, driver_t *dev_driver, struct lobj_type *type, const uint8_t *id);
+device_t *shale_device_new(driver_t *driver, const uint8_t *id_format, ...);
+device_t *shale_device_new_va(driver_t *driver, const uint8_t *id_format, va_list vargs);
+device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, ...);
+device_t *shale_device_new_ctx_va(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, va_list vargs);
 device_t *shale_device_find(const uint8_t *id);
 device_t *shale_device_find_ctx(device_manager_t *ctx, const uint8_t *id);
 static inline device_t *shale_device_get(device_t *device)
