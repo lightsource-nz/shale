@@ -9,10 +9,11 @@
 
 #define BUS_SPI_8_FRAME_SIZE    1
 
-void _bus_spi_8_device_free(struct light_object *obj);
+void _bus_spi_8_device_release(struct light_object *obj);
 static struct lobj_type _spi_8_ltype = (struct lobj_type) {
-        .release = _bus_spi_8_device_free
+        .release = _bus_spi_8_device_release
 };
+void _bus_spi_8_device_free(struct device *device);
 static device_t *_spi_8_device_alloc();
 static uint8_t _spi_8_init(device_t *device);
 static uint8_t _spi_8_add(device_t *device);
@@ -22,16 +23,20 @@ static const struct device_event _spi_8_event = {
         .add = _spi_8_add,
         .message = _spi_8_msg
 };
-Shale_Static_Driver_Define(bus_spi_8, DRIVER_ID_BUS_SPI_8, class_iobus, &_spi_8_ltype, _spi_8_device_alloc, _spi_8_event);
+Shale_Static_Driver_Define(bus_spi_8, DRIVER_ID_BUS_SPI_8, class_iobus, &_spi_8_ltype, _spi_8_event);
 //driver_t *driver_bus_spi_8;
 
 driver_t *shale_driver_bus_spi_8()
 {
         return &_driver_bus_spi_8;
 }
-void _bus_spi_8_device_free(struct light_object *obj)
+void _bus_spi_8_device_free(struct device *device)
 {
-        shale_free(lobject_to_bus_spi_8_device(obj));
+        shale_free(device_to_bus_spi_8_device(device));
+}
+void _bus_spi_8_device_release(struct light_object *obj)
+{
+        _bus_spi_8_device_free(to_device_instance(obj));
 }
 
 static device_t *_spi_8_device_alloc()

@@ -62,7 +62,7 @@ uint8_t shale_class_static_add(const class_descriptor_t *desc)
 uint8_t shale_driver_static_add(const driver_descriptor_t *desc)
 {
         shale_driver_init(desc->object, desc->parent->object, desc->id, desc->device_type,
-                            desc->device_alloc, desc->events);
+                            desc->events);
         desc->object->header.is_static = 1;
 }
 uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, struct device_event events)
@@ -97,14 +97,12 @@ uint8_t _class_add_driver(class_t *_class, driver_t *driver, const uint8_t *id)
     return SHALE_SUCCESS;
 }
 uint8_t shale_driver_init(driver_t *driver_obj, class_t *drv_class, const uint8_t *id,
-                                    const struct lobj_type *dev_type,
-                                    struct device *(*device_alloc)(), struct device_event events)
+                                    const struct lobj_type *dev_type, struct device_event events)
 {
     assert_class(drv_class);
     light_object_init(&driver_obj->header, &ltype_device_driver);
     driver_obj->driver_class = shale_class_get(drv_class);
     driver_obj->device_type = dev_type;
-    driver_obj->device_alloc = device_alloc;
     driver_obj->events = events;
     uint8_t status = _driver_register(driver_obj, id);
     if(status) {

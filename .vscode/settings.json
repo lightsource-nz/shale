@@ -3,6 +3,7 @@
     "cmake.configureSettings": {
         //"PICO_BOARD": "waveshare_rp2040_zero",
         "PICO_BOARD": "pico",
+        //"PICO_TOOLCHAIN_PATH": "D:/workspaces/embedded/tools/arm-gcc/12.2.rel1",
         "PICO_SDK_PATH": "../../pico-sdk"
     },
     "C_Cpp.autoAddFileAssociations": false,

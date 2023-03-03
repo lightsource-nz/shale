@@ -282,9 +282,7 @@ device_t *shale_device_new_va(driver_t *driver, const uint8_t *id_format, va_lis
 }
 device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, ...)
 {
-
         va_list vargs;
-
         va_start(vargs, id_format);
         return shale_device_new_ctx_va(ctx, driver, id_format, vargs);
         va_end(vargs);
