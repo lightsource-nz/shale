@@ -289,7 +289,11 @@ device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const ui
 }
 device_t *shale_device_new_ctx_va(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, va_list vargs)
 {
-        struct device *device = driver->events.alloc();
+        struct device *device;
+        if(!(device = driver->events.alloc())) {
+                light_warn("failed to allocate device memory for id pattern '%s'", id_format);
+                return NULL;
+        }
         light_object_init(&device->header, driver->device_type);
 #ifdef PICO_RP2040
         queue_init_with_spinlock(&device->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, ctx->mq_lock);
@@ -305,8 +309,7 @@ device_t *shale_device_new_ctx_va(device_manager_t *ctx, driver_t *driver, const
                 shale_driver_put(driver);
                 // it is safe to free the device memory directly here,
                 // since it was not added to the object hierarchy
-                // FIXME this needs to be a device type-specific free function or it will crash or leak
-                light_free(device);
+                driver->events.free(device);
                 return NULL;
         }
         driver->driver_class->events.init(device);
