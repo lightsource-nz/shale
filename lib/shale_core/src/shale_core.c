@@ -118,7 +118,7 @@ device_t *_device_lookup(device_manager_t *context, const uint8_t *id)
 }
 static void _device_manager_release(struct light_object *obj)
 {
-    free(to_device_manager(obj));
+    shale_free(to_device_manager(obj));
 }
 #define SHALE_DESCRIBE_BUFFER_LENGTH 128
 static uint8_t _describe_buffer[SHALE_DESCRIBE_BUFFER_LENGTH];
@@ -289,7 +289,7 @@ device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const ui
 }
 device_t *shale_device_new_ctx_va(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, va_list vargs)
 {
-        struct device *device = driver->device_alloc();
+        struct device *device = driver->events.alloc();
         light_object_init(&device->header, driver->device_type);
 #ifdef PICO_RP2040
         queue_init_with_spinlock(&device->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, ctx->mq_lock);

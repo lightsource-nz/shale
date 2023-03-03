@@ -13,12 +13,14 @@ void _bus_spi_8_device_release(struct light_object *obj);
 static struct lobj_type _spi_8_ltype = (struct lobj_type) {
         .release = _bus_spi_8_device_release
 };
-void _bus_spi_8_device_free(struct device *device);
+void _spi_8_device_free(struct device *device);
 static device_t *_spi_8_device_alloc();
 static uint8_t _spi_8_init(device_t *device);
 static uint8_t _spi_8_add(device_t *device);
 static uint8_t _spi_8_msg(device_t *device, message_handle_t *handle);
 static const struct device_event _spi_8_event = {
+        .alloc = _spi_8_device_alloc,
+        .free = _spi_8_device_free,
         .init = _spi_8_init,
         .add = _spi_8_add,
         .message = _spi_8_msg
@@ -30,13 +32,13 @@ driver_t *shale_driver_bus_spi_8()
 {
         return &_driver_bus_spi_8;
 }
-void _bus_spi_8_device_free(struct device *device)
+void _spi_8_device_free(struct device *device)
 {
         shale_free(device_to_bus_spi_8_device(device));
 }
 void _bus_spi_8_device_release(struct light_object *obj)
 {
-        _bus_spi_8_device_free(to_device_instance(obj));
+        _spi_8_device_free(to_device_instance(obj));
 }
 
 static device_t *_spi_8_device_alloc()
