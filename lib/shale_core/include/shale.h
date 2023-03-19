@@ -23,6 +23,7 @@
 #include <pico/util/queue.h>
 #endif
 
+#include <light_message.h>
 #include <light_object.h>
 
 #define shale_malloc malloc

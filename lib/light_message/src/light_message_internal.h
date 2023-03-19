@@ -1,0 +1,4 @@
+#ifndef _LIGHT_SPI_INTERNAL_H
+#define _LIGHT_SPI_INTERNAL_H
+
+#endif
