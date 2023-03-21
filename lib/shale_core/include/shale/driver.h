@@ -1,6 +1,13 @@
 #ifndef _SHALE_DRIVER_H
 #define _SHALE_DRIVER_H
+ 
+DefCommand(Interface_Query);
+DefCommand(Interface_AttachConsumer);
+DefCommand(Interface_SetConsumeTarget); 
 
+DefEvent(Interface_Describe);
+DefEvent(Interface_ConsumerAttached);
+ 
 struct device_event {
         struct device *(*alloc)();
         void (*free)(struct device *);
@@ -71,7 +78,6 @@ extern struct lobj_type ltype_device_driver;
         extern const class_descriptor_t _class_##name##_desc
 #define Shale_Static_Driver(name) \
         extern const driver_descriptor_t _driver_##name##_desc
-//#define Shale_Static_Device(name) device_t* __section(".shaledata.devices") _##name = &name
 
 #define Shale_Static_Class_Define(name, _id, _events) \
         static class_t _class_##name; \

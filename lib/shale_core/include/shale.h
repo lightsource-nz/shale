@@ -118,46 +118,84 @@
 typedef struct device_manager device_manager_t;
 typedef struct device_class class_t;
 typedef struct device_driver driver_t;
+typedef struct device_interface interface_t;
 typedef struct device device_t;
-typedef struct message message_t;
+typedef struct shale_message message_t;
 
 #include "shale/message.h"
 #include "shale/thread.h"
 #include "shale/driver.h"
 
+#define to_device_interface(object) container_of(object, interface_t, header)
 #define to_device_instance(object) container_of(object, device_t, header)
 
 // TODO provide a platform agnostic message queueing interface which also
 // works in host mode
-typedef struct device {
+typedef struct device_interface {
 #ifdef PICO_RP2040
     queue_t queue;
 #endif
+    struct device *parent;
     struct light_object header;
-    driver_t *driver;
+    class_t *_class;
+    uint8_t state;
+} interface_t;
+typedef struct interface_descriptor {
+    interface_t *object;
+    const uint8_t *id;
+    const class_descriptor_t *_class;
+    const interface_descriptor_t *consumed[];
+} interface_descriptor_t;
+
+typedef struct device {
+    struct light_object header;
+    struct interface_t *if_main;
+    interface_t *interface[];
     uint8_t state;
 } device_t;
 typedef struct device_descriptor {
     device_t *object;
     const uint8_t *id;
-    const driver_descriptor_t *driver;
+    const interface_descriptor_t *if_main;
+    const interface_descriptor_t *interface[];
 } device_descriptor_t;
 
-struct event {
+struct sh_event {
+    struct light_message header;
     uint16_t id;
-    struct device *source;
+    struct interface *source;
 };
 
 #ifdef PICO_RP2040
+#define __static_interface __section(".shaledata.interfaces")
+#define Light_Interface_Load(name)
 #define __static_device __section(".shaledata.devices")
 #define Light_Device_Load(name)
 #else
+#define __static_interface
 #define __static_device
+#define Light_Interface_Load(name) \
+        extern uint8_t static_interface_count; \
+        extern const interface_descriptor_t *static_interfaces[]; \
+        void __attribute__((constructor)) _load_##name() { static_interfaces[static_interface_count++] = name##_desc; }
 #define Light_Device_Load(name) \
         extern uint8_t static_device_count; \
         extern const device_descriptor_t *static_devices[]; \
         void __attribute__((constructor)) _load_##name() { static_devices[static_device_count++] = name##_desc; }
 #endif
+
+#define Shale_Static_Interface(name) \
+        extern const interface_descriptor_t _##name##_desc
+
+#define Shale_Static_Interface_Define(name, _id, _class) \
+        static struct _class##_interface _##name; \
+        const interface_descriptor_t __in_flash(".descriptors") _##name##_desc = { \
+                .object  = &_##name.header.header, \
+                .id = _id, \
+                .class = &_class_##_class##_desc \
+        }; \
+        const interface_descriptor_t* __static_interface name##_desc = &_##name##_desc; \
+        Light_Interface_Load(name)
 
 #define Shale_Static_Device(name) \
         extern const device_descriptor_t _##name##_desc
@@ -205,7 +243,7 @@ device_t *shale_device_find(const uint8_t *id);
 device_t *shale_device_find_ctx(device_manager_t *ctx, const uint8_t *id);
 static inline device_t *shale_device_get(device_t *device)
 {
-        return to_device_instance(light_object_get(&device->header));
+        return to_device_interface(light_object_get(&device->header));
 }
 static inline void shale_device_put(device_t *device)
 {

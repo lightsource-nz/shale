@@ -38,7 +38,7 @@ void _spi_8_device_free(struct device *device)
 }
 void _bus_spi_8_device_release(struct light_object *obj)
 {
-        _spi_8_device_free(to_device_instance(obj));
+        _spi_8_device_free(to_device_interface(obj));
 }
 
 static device_t *_spi_8_device_alloc()

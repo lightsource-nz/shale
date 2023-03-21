@@ -11,6 +11,7 @@ enum msg_meta {
 struct light_message;
 struct message_type {
         const uint8_t meta;
+        const uint8_t id;
         const uint8_t *name;
 };
 
@@ -27,5 +28,14 @@ struct light_message {
 #define DefMessage(type,name) struct message_type name = Message(type, name)
 #define DefEvent(name) DefMessage(MSG_EVENT, name)
 #define DefCommand(name) DefMessage(MSG_COMMAND, name)
+
+static inline bool light_message_is_command(struct light_message *msg)
+{
+        return msg->type->meta == MSG_COMMAND;
+}
+static inline bool light_message_is_event(struct light_message *msg)
+{
+        return msg->type->meta == MSG_EVENT;
+}
 
 #endif

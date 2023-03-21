@@ -44,7 +44,7 @@ driver_t *shale_driver_sh1107()
 }
 void _sh1107_device_release(struct light_object *obj)
 {
-        _sh1107_device_free(to_device_instance(obj));
+        _sh1107_device_free(to_device_interface(obj));
 }
 void _sh1107_device_free(struct device *device)
 {
