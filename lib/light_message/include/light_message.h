@@ -11,7 +11,6 @@ enum msg_meta {
 struct light_message;
 struct message_type {
         const uint8_t meta;
-        const uint8_t id;
         const uint8_t *name;
 };
 

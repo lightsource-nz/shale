@@ -8,17 +8,17 @@ DefCommand(Interface_SetConsumeTarget);
 DefEvent(Interface_Describe);
 DefEvent(Interface_ConsumerAttached);
  
-struct device_event {
-        struct device *(*alloc)();
-        void (*free)(struct device *);
-        uint8_t (*init)(struct device *);
-        uint8_t (*add)(struct device *);
-        uint8_t (*message)(struct device *, struct message_handle *);
+struct interface_event {
+        struct device_interface *(*alloc)();
+        void (*free)(struct device_interface *);
+        uint8_t (*init)(struct device_interface *);
+        uint8_t (*add)(struct device_interface *);
+        uint8_t (*message)(struct device_interface *, struct message_handle *);
 };
 
 typedef struct device_class {
     struct light_object header;
-    struct device_event events;
+    struct interface_event events;
     uint8_t driver_count;
     driver_t *drivers[SHALE_CLASS_MAX_DRIVERS];
 } class_t;
@@ -26,19 +26,19 @@ typedef struct device_driver {
     struct light_object header;
     class_t *driver_class;
     const struct lobj_type *device_type;
-    struct device_event events;
+    struct interface_event events;
 } driver_t;
 typedef struct class_descriptor {
     class_t *object;
     const uint8_t *id;
-    struct device_event events;
+    const struct interface_event events;
 } class_descriptor_t;
 typedef struct driver_descriptor {
     driver_t *object;
     const uint8_t *id;
     const class_descriptor_t *parent;
     const struct lobj_type *device_type;
-    const struct device_event events;
+    const struct interface_event events;
 } driver_descriptor_t;
 
 struct class_table {
@@ -94,9 +94,9 @@ extern void shale_class_setup();
 extern struct class_table *shale_class_table_main_get();
 extern uint8_t shale_class_static_add(const class_descriptor_t *desc);
 extern uint8_t shale_driver_static_add(const driver_descriptor_t *desc);
-extern uint8_t shale_class_init(class_t *_class, const uint8_t *id, struct device_event events);
+extern uint8_t shale_class_init(class_t *_class, const uint8_t *id, struct interface_event events);
 extern uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id,
-                                    const struct lobj_type *dev_type, struct device_event events);
+                                    const struct lobj_type *dev_type, struct interface_event events);
 extern class_t *shale_class_find(uint8_t *id);
 extern class_t *shale_class_find_ctx(struct class_table *ctx, uint8_t *id);
 extern driver_t *shale_driver_find(class_t *_class, uint8_t *id);
@@ -128,6 +128,6 @@ static inline class_t *shale_driver_class(driver_t *driver)
 {
         return driver->driver_class;
 }
-extern void shale_class_deliver_message(class_t *target, device_t *device, message_handle_t *msg);
-extern void shale_driver_deliver_message(driver_t *target, device_t *device, message_handle_t *msg);
+extern void shale_class_deliver_message(class_t *target, struct device_interface *iface, message_handle_t *msg);
+extern void shale_driver_deliver_message(driver_t *target, struct device_interface *iface, message_handle_t *msg);
 #endif

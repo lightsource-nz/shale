@@ -14,14 +14,14 @@ static struct lobj_type _spi_32_ltype = (struct lobj_type) {
         .release = _bus_spi_32_device_release
 };
 
-void _spi_32_device_free(struct device *device);
-static device_t *_spi_32_device_alloc();
+void _spi_32_interface_free(struct device *device);
+static struct device_interface *_spi_32_interface_alloc();
 static uint8_t _spi_32_init(device_t *device);
 static uint8_t _spi_32_add(device_t *device);
 static uint8_t _spi_32_msg(device_t *device, message_handle_t *handle);
-static const struct device_event _spi_32_event = {
-        .alloc = _spi_32_device_alloc,
-        .free = _spi_32_device_free,
+static const struct interface_event _spi_32_event = {
+        .alloc = _spi_32_interface_alloc,
+        .free = _spi_32_interface_free,
         .init = _spi_32_init,
         .add = _spi_32_add,
         .message = _spi_32_msg
@@ -33,16 +33,16 @@ driver_t *shale_driver_bus_spi_32()
 {
     return &_driver_bus_spi_32;
 }
-void _spi_32_device_free(struct device *device)
+void _spi_32_interface_free(struct device *device)
 {
         shale_free(device_to_bus_spi_32_device(device));
 }
 void _bus_spi_32_device_release(struct light_object *obj)
 {
-        _spi_32_device_free(to_device_interface(obj));
+        _spi_32_interface_free(to_device_interface(obj));
 }
 
-static device_t *_spi_32_device_alloc()
+static device_t *_spi_32_interface_alloc()
 {
         struct bus_spi_32_device *device = shale_malloc(sizeof(struct bus_spi_32_device));
         return &device->header.header;

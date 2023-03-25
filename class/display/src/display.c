@@ -6,7 +6,7 @@
 static uint8_t _display_init(struct device *device);
 static uint8_t _display_add(struct device *device);
 static uint8_t _display_message(struct device *device, struct message_handle *handle);
-static const struct device_event _display_event = {
+static const struct interface_event _display_event = {
         .init = _display_init,
         .add = _display_add,
         .message = _display_message

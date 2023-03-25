@@ -27,7 +27,7 @@ static device_t *_sh1107_device_alloc();
 static uint8_t _sh1107_init(device_t *device);
 static uint8_t _sh1107_add(device_t *device);
 static uint8_t _sh1107_msg(device_t *device, message_handle_t *handle);
-static const struct device_event _sh1107_event = {
+static const struct interface_event _sh1107_event = {
         .alloc = _sh1107_device_alloc,
         .free = _sh1107_device_free,
         .init = _sh1107_init,

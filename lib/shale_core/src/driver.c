@@ -65,7 +65,7 @@ uint8_t shale_driver_static_add(const driver_descriptor_t *desc)
                             desc->events);
         desc->object->header.is_static = 1;
 }
-uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, struct device_event events)
+uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, struct interface_event events)
 {
     light_object_init(&class_obj->header, &ltype_device_class);
     class_obj->events = events;
@@ -97,7 +97,7 @@ uint8_t _class_add_driver(class_t *_class, driver_t *driver, const uint8_t *id)
     return SHALE_SUCCESS;
 }
 uint8_t shale_driver_init(driver_t *driver_obj, class_t *drv_class, const uint8_t *id,
-                                    const struct lobj_type *dev_type, struct device_event events)
+                                    const struct lobj_type *dev_type, struct interface_event events)
 {
     assert_class(drv_class);
     light_object_init(&driver_obj->header, &ltype_device_driver);
@@ -139,11 +139,11 @@ driver_t *shale_driver_find(class_t *_class, uint8_t *id)
         }
         return NULL;
 }
-void shale_class_deliver_message(class_t *target, device_t *device, message_handle_t *msg)
+void shale_class_deliver_message(class_t *target, struct device_interface *iface, message_handle_t *msg)
 {
-    target->events.message(device, msg);
+    target->events.message(iface, msg);
 }
-void shale_driver_deliver_message(driver_t *target, device_t *device, message_handle_t *msg);
+void shale_driver_deliver_message(driver_t *target, struct device_interface *iface, message_handle_t *msg);
 
 class_t *_class_lookup(uint8_t *id)
 {

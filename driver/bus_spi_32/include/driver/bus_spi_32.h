@@ -11,18 +11,18 @@
 
 Shale_Static_Driver(bus_spi_32);
 
-struct bus_spi_32_device {
-    struct iobus_device header;
+struct bus_spi_32_interface {
+    struct iobus_interface header;
     bool is_master;
     uint8_t pin_sck;
     uint8_t pin_miso;
     uint8_t pin_mosi;
     uint8_t pin_cs;
 };
-#define to_bus_spi_32_device(ptr) container_of(ptr, struct bus_spi_32_device, header)
-#define device_to_bus_spi_32_device(ptr) to_bus_spi_32_device(to_iobus_device(ptr))
-#define lobject_to_bus_spi_32_device(ptr) device_to_bus_spi_32_device(to_device_instance(ptr))
+#define to_bus_spi_32_interface(ptr) container_of(ptr, struct bus_spi_32_interface, header)
+#define device_to_bus_spi_32_interface(ptr) to_bus_spi_32_interface(to_iobus_interface(ptr))
+#define lobject_to_bus_spi_32_interface(ptr) device_to_bus_spi_32_interface(to_device_interface(ptr))
 
-driver_t *shale_driver_bus_spi_32();
+struct device_interface *shale_interface_bus_spi_32();
 
 #endif

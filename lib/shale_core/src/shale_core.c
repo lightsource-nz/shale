@@ -135,11 +135,11 @@ uint8_t *shale_driver_describe(struct device_driver *driver)
                                         shale_class_name(driver->driver_class));
         return _describe_buffer;
 }
-uint8_t *shale_device_describe(struct device *device)
+uint8_t *shale_interface_describe(struct device_interface *iface)
 {
         snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
-                "DEVICE: id=%s, class=%s, driver=%s", shale_device_name(device),
-                shale_class_name(device->driver->driver_class), shale_driver_name(device->driver));
+                "DEVICE: id=%s, class=%s, driver=%s", shale_device_name(iface),
+                shale_class_name(iface->driver->driver_class), shale_driver_name(iface->driver));
         return _describe_buffer;
 }
 
@@ -170,7 +170,7 @@ uint8_t shale_init()
         
         struct device_manager *devman = shale_device_manager_default();
         for(uint8_t i = 0; i < devman->device_count; i++) {
-                light_debug("[%s]",shale_device_describe(devman->device_table[i]));
+                light_debug("[%s]",shale_interface_describe(devman->device_table[i]));
         }
     return LIGHT_OK;
 }
