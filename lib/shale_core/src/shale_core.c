@@ -110,9 +110,17 @@ void _list_delete_item(void *list[], uint8_t *count, void *item)
 }
 device_t *_device_lookup(device_manager_t *context, const uint8_t *id)
 {
-    for(int i = 0; i < SHALE_MAX_DEVICES; i++) {
+    for(int i = 0; i < context->device_count; i++) {
         if(strcmp(light_object_get_name(&context->device_table[i]->header), id))
             return context->device_table[i];
+    }
+    return NULL;
+}
+struct device_interface *_interface_lookup(struct device_manager *context, const uint8_t *id)
+{
+    for(int i = 0; i < context->interface_count; i++) {
+        if(strcmp(light_object_get_name(&context->interface_table[i]->header), id))
+            return context->interface_table[i];
     }
     return NULL;
 }
@@ -138,8 +146,14 @@ uint8_t *shale_driver_describe(struct device_driver *driver)
 uint8_t *shale_interface_describe(struct device_interface *iface)
 {
         snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
-                "DEVICE: id=%s, class=%s, driver=%s", shale_device_name(iface),
+                "INTERFACE: id=%s, class=%s, driver=%s", shale_interface_name(iface),
                 shale_class_name(iface->driver->driver_class), shale_driver_name(iface->driver));
+        return _describe_buffer;
+}
+uint8_t *shale_device_describe(struct device *device)
+{
+        snprintf(_describe_buffer, SHALE_DESCRIBE_BUFFER_LENGTH,
+                "DEVICE: id=%s, interfaces: %d", shale_device_name(device), device->if_count);
         return _describe_buffer;
 }
 
@@ -170,7 +184,10 @@ uint8_t shale_init()
         
         struct device_manager *devman = shale_device_manager_default();
         for(uint8_t i = 0; i < devman->device_count; i++) {
-                light_debug("[%s]",shale_interface_describe(devman->device_table[i]));
+                light_debug("[%s]",shale_device_describe(devman->device_table[i]));
+                for(uint8_t j = 0; j < devman->device_table[i]->if_count; j++) {
+                        light_debug("+--[%s]",shale_interface_describe(devman->device_table[i]->interface[j]));
+                }
         }
     return LIGHT_OK;
 }
@@ -263,10 +280,78 @@ uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id)
 
     return LIGHT_OK;
 }
+
+uint8_t shale_interface_static_add(const struct interface_descriptor *desc)
+{
+        struct device_interface *interface = shale_interface_new(desc->driver->object, "%s", desc->id);
+        interface->header.is_static = true;
+
+        return LIGHT_OK;
+}
+struct device_interface *shale_interface_new(driver_t *driver, const uint8_t *id_format, ...)
+{
+        va_list vargs;
+
+        va_start(vargs, id_format);
+        return shale_interface_new_va(driver, id_format, vargs);
+        va_end(vargs);
+}
+struct device_interface *shale_interface_new_va(driver_t *driver, const uint8_t *id_format, va_list vargs)
+{
+        return shale_interface_new_ctx_va(&manager_default, driver, id_format, vargs);
+}
+struct device_interface *shale_interface_new_ctx(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, ...)
+{
+        va_list vargs;
+        va_start(vargs, id_format);
+        return shale_interface_new_ctx_va(ctx, driver, id_format, vargs);
+        va_end(vargs);
+}
+struct device_interface *shale_interface_new_ctx_va(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, va_list vargs)
+{
+        struct device_interface *interface;
+        if(!(interface = driver->events.alloc())) {
+                light_warn("failed to allocate memory for interface with id pattern '%s'", id_format);
+                return NULL;
+        }
+        light_object_init(&interface->header, driver->interface_ltype);
+#ifdef PICO_RP2040
+        queue_init_with_spinlock(&interface->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, ctx->mq_lock);
+#endif
+        interface->driver = shale_driver_get(driver);
+        interface->state = SHALE_INTERFACE_STATE_INIT;
+        uint8_t retval;
+        if(retval = _device_manager_add_interface(ctx, interface, id_format, vargs)) {
+                light_warn("failed to create new interface '%s' at context '%s", id_format, ctx->header.id);
+#ifdef PICO_RP2040
+                queue_free(&interface->queue);
+#endif
+                shale_driver_put(driver);
+                // it is safe to free the interface memory directly here,
+                // since it was not added to the object hierarchy
+                driver->events.free(interface);
+                return NULL;
+        }
+        driver->driver_class->events.init(interface);
+        driver->events.init(interface);
+        interface->state = SHALE_DEVICE_STATE_ACTIVE;
+        return interface;
+}
+struct device_interface *shale_interface_find(const uint8_t *id)
+{
+        return shale_interface_find_ctx(&manager_default, id);
+}
+struct device_interface *shale_interface_find_ctx(device_manager_t *ctx, const uint8_t *id)
+{
+        return _interface_lookup(ctx, id);
+}
+
 uint8_t shale_device_static_add(const device_descriptor_t *desc)
 {
-        shale_device_new(desc->driver->object, "%s", desc->id);
-        desc->object->header.is_static = 1;
+        struct device *device = shale_device_new(desc->driver->object, "%s", desc->id);
+        device->header.is_static = 1;
+
+        return LIGHT_OK;
 }
 device_t *shale_device_new(driver_t *driver, const uint8_t *id_format, ...)
 {
@@ -294,14 +379,14 @@ device_t *shale_device_new_ctx_va(device_manager_t *ctx, driver_t *driver, const
                 light_warn("failed to allocate device memory for id pattern '%s'", id_format);
                 return NULL;
         }
-        light_object_init(&device->header, driver->device_type);
+        light_object_init(&device->header, driver->interface_ltype);
 #ifdef PICO_RP2040
         queue_init_with_spinlock(&device->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, ctx->mq_lock);
 #endif
         device->driver = shale_driver_get(driver);
         device->state = SHALE_DEVICE_STATE_INIT;
         uint8_t retval;
-        if(retval = _device_manager_add(ctx, device, id_format, vargs)) {
+        if(retval = _device_manager_add_device(ctx, device, id_format, vargs)) {
                 light_warn("failed to create new device '%s' at context '%s", id_format, ctx->header.id);
 #ifdef PICO_RP2040
                 queue_free(&device->queue);
@@ -325,7 +410,7 @@ device_t *shale_device_find_ctx(device_manager_t *ctx, const uint8_t *id)
 {
         return _device_lookup(ctx, id);
 }
-uint8_t _device_manager_add(device_manager_t *context, device_t *device, const uint8_t *id_format, va_list vargs)
+uint8_t _device_manager_add_device(device_manager_t *context, device_t *device, const uint8_t *id_format, va_list vargs)
 {
         if(context->device_count >= SHALE_MANAGER_MAX_DEVICES)
                 return ERROR_MAX_ENTITIES;
@@ -339,7 +424,20 @@ uint8_t _device_manager_add(device_manager_t *context, device_t *device, const u
         context->device_table[context->device_count++] = device;
         return SHALE_SUCCESS;
 }
-
+uint8_t _device_manager_add_interface(device_manager_t *context, struct device_interface *interface, const uint8_t *id_format, va_list vargs)
+{
+        if(context->interface_count >= SHALE_MANAGER_MAX_DEVICES)
+                return ERROR_MAX_ENTITIES;
+        // TODO verify that interface id is unique for this DM
+        int retval;
+        if(retval = light_object_add_va(&interface->header, &context->header, id_format, vargs)) {
+                light_debug("failed to add interface with id pattern '%s' to device manager '%s' (%s)",
+                                        id_format, context->header.id, light_error_to_string(retval));
+                return retval;
+        }
+        context->interface_table[context->interface_count++] = interface;
+        return SHALE_SUCCESS;
+}
 bool shale_device_message_pending(device_t *device)
 {
     message_handle_t *handle;

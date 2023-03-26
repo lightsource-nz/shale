@@ -21,7 +21,8 @@ void _list_delete_item(void *list[], uint8_t *count, void *item);
 
 uint8_t _class_register(class_t *_class, const uint8_t *id);
 uint8_t _driver_register(driver_t *driver, const uint8_t *id);
-uint8_t _device_manager_add(device_manager_t *context, device_t *device, const uint8_t *id, va_list vargs);
+uint8_t _device_manager_add_device(device_manager_t *context, device_t *device, const uint8_t *id_fornat, va_list vargs);
+uint8_t _device_manager_add_interface(device_manager_t *context, struct device_interface *interface, const uint8_t *id_format, va_list vargs);
 uint8_t _thread_register(shale_thread_t *thread);
 
 void _service_message_queues();

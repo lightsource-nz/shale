@@ -13,7 +13,7 @@ void _bus_spi_8_interface_release(struct light_object *obj);
 static struct lobj_type _spi_8_ltype = (struct lobj_type) {
         .release = _bus_spi_8_interface_release
 };
-void _spi_8_interface_free(struct device *device);
+void _spi_8_interface_free(struct device_interface *device);
 static struct device_interface *_spi_8_interface_alloc();
 static uint8_t _spi_8_init(struct device_interface *device);
 static uint8_t _spi_8_add(struct device_interface *device);
