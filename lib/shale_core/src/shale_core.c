@@ -11,11 +11,17 @@
 
 device_manager_t manager_default;
 
-#define SHALE_ID_DEVICE_MANAGER "device_manager"
+#define SHALE_ID_LTYPE_DEVICE_MANAGER "device_manager"
 static void _device_manager_release(struct light_object *obj);
 struct lobj_type ltype_device_manager = {
-        .id = SHALE_ID_DEVICE_MANAGER,
+        .id = SHALE_ID_LTYPE_DEVICE_MANAGER,
         .release = &_device_manager_release
+};
+#define SHALE_ID_LTYPE_DEVICE "device_instance"
+static void _device_release(struct light_object *obj);
+struct lobj_type ltype_device = {
+        .id = SHALE_ID_LTYPE_DEVICE,
+        .release = &_device_release
 };
 
 #ifdef PICO_RP2040
@@ -123,6 +129,10 @@ struct device_interface *_interface_lookup(struct device_manager *context, const
             return context->interface_table[i];
     }
     return NULL;
+}
+static void _device_release(struct light_object *obj)
+{
+    shale_free(to_device_instance(obj));
 }
 static void _device_manager_release(struct light_object *obj)
 {
@@ -399,6 +409,42 @@ device_t *shale_device_new_ctx_va(device_manager_t *ctx, driver_t *driver, const
         }
         driver->driver_class->events.init(device);
         driver->events.init(device);
+        device->state = SHALE_DEVICE_STATE_ACTIVE;
+        return device;
+}
+device_t *shale_device_new_composite(struct device_interface *interface[], const uint8_t *id_format, ...);
+device_t *shale_device_new_composite_va(struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
+device_t *shale_device_new_composite_ctx(device_manager_t *ctx, struct device_interface *interface[], const uint8_t *id_format, ...);
+device_t *shale_device_new_composite_ctx_va(device_manager_t *ctx, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
+{
+        struct device *device;
+        if(!(device = shale_malloc(sizeof(struct device)))) {
+                light_warn("failed to allocate device memory for id pattern '%s'", id_format);
+                return NULL;
+        }
+        light_object_init(&device->header, &ltype_device);
+        
+        device->state = SHALE_DEVICE_STATE_INIT;
+        for(uint8_t i = 0; interface[i] != NULL; i++) {
+                // TODO clean up these counted references in release method
+                device->interface[i] = shale_interface_get(interface[i]);
+                device->if_count++;
+        }
+        uint8_t retval;
+        if(retval = _device_manager_add_device(ctx, device, id_format, vargs)) {
+                light_warn("failed to create new device '%s' at context '%s", id_format, ctx->header.id);
+                for(uint8_t i = 0; i < device->if_count; i++) {
+                        shale_interface_put(device->interface[i]);
+                }
+                shale_free(device);
+                return NULL;
+        }
+        for(uint8_t i = 0; i < device->if_count; i++) {
+                device->interface[i]->state + SHALE_INTERFACE_STATE_ACTIVE;
+                device->interface[i]->driver->events.add(device->interface[i]);
+                device->interface[i]->driver->driver_class->events.add(device->interface[i]);
+
+        }
         device->state = SHALE_DEVICE_STATE_ACTIVE;
         return device;
 }
