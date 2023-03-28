@@ -1,12 +1,12 @@
 #ifndef _SHALE_DRIVER_H
 #define _SHALE_DRIVER_H
  
-DefCommand(Interface_Query);
-DefCommand(Interface_AttachConsumer);
-DefCommand(Interface_SetConsumeTarget); 
+DeclareCommand(Interface_Query);
+DeclareCommand(Interface_AttachConsumer);
+DeclareCommand(Interface_SetConsumeTarget); 
 
-DefEvent(Interface_Describe);
-DefEvent(Interface_ConsumerAttached);
+DeclareEvent(Interface_Describe);
+DeclareEvent(Interface_ConsumerAttached);
  
 struct interface_event {
         struct device_interface *(*alloc)();

@@ -5,6 +5,13 @@
 
 #define LTYPE_CLASS_TABLE_NAME "class_table"
 
+DefCommand(Interface_Query);
+DefCommand(Interface_AttachConsumer);
+DefCommand(Interface_SetConsumeTarget); 
+
+DefEvent(Interface_Describe);
+DefEvent(Interface_ConsumerAttached);
+
 static void _class_table_child_add(struct light_object *obj, struct light_object *child);
 static void _class_table_child_remove(struct light_object *obj, struct light_object *child);
 struct lobj_type ltype_class_table = {

@@ -24,6 +24,10 @@ struct light_message {
 #define Event(name) Message(MSG_EVENT, name)
 #define Command(name) Message(MSG_COMMAND, name)
 
+#define DeclareMessage(type, name) extern struct message_type name
+#define DeclareEvent(name) DeclareMessage(MSG_EVENT, name)
+#define DeclareCommand(name) DeclareMessage(MSG_COMMAND, name)
+
 #define DefMessage(type,name) struct message_type name = Message(type, name)
 #define DefEvent(name) DefMessage(MSG_EVENT, name)
 #define DefCommand(name) DefMessage(MSG_COMMAND, name)

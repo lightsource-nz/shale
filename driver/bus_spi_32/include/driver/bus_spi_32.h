@@ -20,9 +20,9 @@ struct bus_spi_32_interface {
     uint8_t pin_cs;
 };
 #define to_bus_spi_32_interface(ptr) container_of(ptr, struct bus_spi_32_interface, header)
-#define device_to_bus_spi_32_interface(ptr) to_bus_spi_32_interface(to_iobus_interface(ptr))
-#define lobject_to_bus_spi_32_interface(ptr) device_to_bus_spi_32_interface(to_device_interface(ptr))
+#define interface_to_bus_spi_32_interface(ptr) to_bus_spi_32_interface(to_iobus_interface(ptr))
+#define lobject_to_bus_spi_32_interface(ptr) interface_to_bus_spi_32_interface(to_device_interface(ptr))
 
-struct device_interface *shale_interface_bus_spi_32();
+struct device_driver *shale_driver_bus_spi_32();
 
 #endif

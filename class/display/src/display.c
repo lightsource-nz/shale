@@ -3,9 +3,9 @@
 #include "class/display.h"
 #include "class/display_internal.h"
 
-static uint8_t _display_init(struct device *device);
-static uint8_t _display_add(struct device *device);
-static uint8_t _display_message(struct device *device, struct message_handle *handle);
+static uint8_t _display_init(struct device_interface *device);
+static uint8_t _display_add(struct device_interface *device);
+static uint8_t _display_message(struct device_interface *device, struct message_handle *handle);
 static const struct interface_event _display_event = {
         .init = _display_init,
         .add = _display_add,
@@ -20,15 +20,15 @@ class_t *shale_class_display()
 }
 
 
-static uint8_t _display_init(struct device *device)
+static uint8_t _display_init(struct device_interface *device)
 {
         return LIGHT_OK;
 }
-static uint8_t _display_add(struct device *device)
+static uint8_t _display_add(struct device_interface *device)
 {
         return LIGHT_OK;
 }
-static uint8_t _display_message(struct device *device, struct message_handle *handle)
+static uint8_t _display_message(struct device_interface *device, struct message_handle *handle)
 {
         return MX_DELEGATE;
 }

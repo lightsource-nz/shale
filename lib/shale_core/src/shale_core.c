@@ -66,9 +66,10 @@ static void shale_load_static_devices()
         light_debug("preloaded %d devices", load_count);
 }
 #else
-uint8_t static_class_count, static_driver_count, static_device_count = 0;
+uint8_t static_class_count, static_driver_count, static_interface_count, static_device_count = 0;
 const class_descriptor_t *static_classes[SHALE_MAX_STATIC_CLASSES];
 const driver_descriptor_t *static_drivers[SHALE_MAX_STATIC_DRIVERS];
+const struct interface_descriptor *static_interfaces[SHALE_MAX_STATIC_INTERFACES];
 const device_descriptor_t *static_devices[SHALE_MAX_STATIC_DEVICES];
 static void shale_load_static_classes()
 {
@@ -293,9 +294,58 @@ uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id)
 
 uint8_t shale_interface_static_add(const struct interface_descriptor *desc)
 {
-        struct device_interface *interface = shale_interface_new(desc->driver->object, "%s", desc->id);
-        interface->header.is_static = true;
+        //struct device_interface *interface = shale_interface_new(desc->driver->object, "%s", desc->id);
+        struct device_interface *ifx = desc->object;
+        uint8_t retval;
+        if(retval = shale_interface_init(ifx, desc->driver->object, "%s", desc->id)) {
+                light_debug("shale_interface_init failed with code %s", light_error_to_string(retval));
+                return retval;
+        }
 
+        ifx->header.is_static = true;
+
+        return LIGHT_OK;
+}
+uint8_t shale_interface_init(struct device_interface *ifx, driver_t *driver, const uint8_t *id_format, ...)
+{
+        va_list vargs;
+
+        va_start(vargs, id_format);
+        return shale_interface_init_va(ifx, driver, id_format, vargs);
+        va_end(vargs);
+}
+uint8_t shale_interface_init_va(struct device_interface *ifx, driver_t *driver, const uint8_t *id_format, va_list vargs)
+{
+        return shale_interface_init_ctx_va(&manager_default, ifx, driver, id_format, vargs);
+}
+uint8_t shale_interface_init_ctx(device_manager_t *ctx, struct device_interface *ifx, driver_t *driver, const uint8_t *id_format, ...)
+{
+        va_list vargs;
+
+        va_start(vargs, id_format);
+        return shale_interface_init_ctx_va(ctx, ifx, driver, id_format, vargs);
+        va_end(vargs);
+}
+uint8_t shale_interface_init_ctx_va(device_manager_t *ctx, struct device_interface *ifx, driver_t *driver, const uint8_t *id_format, va_list vargs)
+{
+        light_object_init(&ifx->header, driver->interface_ltype);
+#ifdef PICO_RP2040
+        queue_init_with_spinlock(&interface->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, ctx->mq_lock);
+#endif
+        ifx->driver = shale_driver_get(driver);
+        ifx->state = SHALE_INTERFACE_STATE_INIT;
+        uint8_t retval;
+        if(retval = _device_manager_add_interface(ctx, ifx, id_format, vargs)) {
+                light_warn("failed to create new interface '%s' at context '%s", id_format, ctx->header.id);
+#ifdef PICO_RP2040
+                queue_free(&interface->queue);
+#endif
+                shale_driver_put(driver);
+                return retval;
+        }
+        driver->driver_class->events.init(ifx);
+        driver->events.init(ifx);
+        ifx->state = SHALE_INTERFACE_STATE_ACTIVE;
         return LIGHT_OK;
 }
 struct device_interface *shale_interface_new(driver_t *driver, const uint8_t *id_format, ...)
@@ -319,33 +369,19 @@ struct device_interface *shale_interface_new_ctx(device_manager_t *ctx, driver_t
 }
 struct device_interface *shale_interface_new_ctx_va(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, va_list vargs)
 {
-        struct device_interface *interface;
-        if(!(interface = driver->events.alloc())) {
+        struct device_interface *ifx;
+        if(!(ifx = driver->events.alloc())) {
                 light_warn("failed to allocate memory for interface with id pattern '%s'", id_format);
                 return NULL;
         }
-        light_object_init(&interface->header, driver->interface_ltype);
-#ifdef PICO_RP2040
-        queue_init_with_spinlock(&interface->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, ctx->mq_lock);
-#endif
-        interface->driver = shale_driver_get(driver);
-        interface->state = SHALE_INTERFACE_STATE_INIT;
+
         uint8_t retval;
-        if(retval = _device_manager_add_interface(ctx, interface, id_format, vargs)) {
-                light_warn("failed to create new interface '%s' at context '%s", id_format, ctx->header.id);
-#ifdef PICO_RP2040
-                queue_free(&interface->queue);
-#endif
-                shale_driver_put(driver);
-                // it is safe to free the interface memory directly here,
-                // since it was not added to the object hierarchy
-                driver->events.free(interface);
+        if(retval = shale_interface_init_ctx_va(ctx, ifx, driver, id_format, vargs)) {
+                light_warn("failed to initialize new interface with id pattern '%s': %s", id_format, light_error_to_string(retval));
+                driver->events.free(ifx);
                 return NULL;
         }
-        driver->driver_class->events.init(interface);
-        driver->events.init(interface);
-        interface->state = SHALE_DEVICE_STATE_ACTIVE;
-        return interface;
+        return ifx;
 }
 struct device_interface *shale_interface_find(const uint8_t *id)
 {
@@ -358,63 +394,64 @@ struct device_interface *shale_interface_find_ctx(device_manager_t *ctx, const u
 
 uint8_t shale_device_static_add(const device_descriptor_t *desc)
 {
-        struct device *device = shale_device_new(desc->driver->object, "%s", desc->id);
-        device->header.is_static = 1;
+        struct device *device = desc->object;
+        struct device_interface *if_list[SHALE_DEVICE_MAX_INTERFACES + 1];
+        uint8_t i;
+        for(i = 0; i < desc->if_count; i++) {
+                if_list[i] = desc->interface[i]->object;
+        }
+        if_list[i + 1] = NULL;
 
+        uint8_t retval;
+        if(retval = shale_device_init_composite(device, if_list, "%s", desc->id)) {
+                return retval;
+        }
+
+        device->header.is_static = 1;
         return LIGHT_OK;
 }
-device_t *shale_device_new(driver_t *driver, const uint8_t *id_format, ...)
+device_t *shale_device_new(struct device_interface *if_main, const uint8_t *id_format, ...)
 {
         va_list vargs;
 
         va_start(vargs, id_format);
-        return shale_device_new_va(driver, id_format, vargs);
+        return shale_device_new_va(if_main, id_format, vargs);
         va_end(vargs);
 }
-device_t *shale_device_new_va(driver_t *driver, const uint8_t *id_format, va_list vargs)
+device_t *shale_device_new_va(struct device_interface *if_main, const uint8_t *id_format, va_list vargs)
 {
-        return shale_device_new_ctx_va(&manager_default, driver, id_format, vargs);
+        return shale_device_new_ctx_va(&manager_default, if_main, id_format, vargs);
 }
-device_t *shale_device_new_ctx(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, ...)
+device_t *shale_device_new_ctx(device_manager_t *ctx, struct device_interface *if_main, const uint8_t *id_format, ...)
 {
         va_list vargs;
         va_start(vargs, id_format);
-        return shale_device_new_ctx_va(ctx, driver, id_format, vargs);
+        return shale_device_new_ctx_va(ctx, if_main, id_format, vargs);
         va_end(vargs);
 }
-device_t *shale_device_new_ctx_va(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, va_list vargs)
+device_t *shale_device_new_ctx_va(device_manager_t *ctx, struct device_interface *if_main, const uint8_t *id_format, va_list vargs)
 {
-        struct device *device;
-        if(!(device = driver->events.alloc())) {
-                light_warn("failed to allocate device memory for id pattern '%s'", id_format);
-                return NULL;
-        }
-        light_object_init(&device->header, driver->interface_ltype);
-#ifdef PICO_RP2040
-        queue_init_with_spinlock(&device->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, ctx->mq_lock);
-#endif
-        device->driver = shale_driver_get(driver);
-        device->state = SHALE_DEVICE_STATE_INIT;
-        uint8_t retval;
-        if(retval = _device_manager_add_device(ctx, device, id_format, vargs)) {
-                light_warn("failed to create new device '%s' at context '%s", id_format, ctx->header.id);
-#ifdef PICO_RP2040
-                queue_free(&device->queue);
-#endif
-                shale_driver_put(driver);
-                // it is safe to free the device memory directly here,
-                // since it was not added to the object hierarchy
-                driver->events.free(device);
-                return NULL;
-        }
-        driver->driver_class->events.init(device);
-        driver->events.init(device);
-        device->state = SHALE_DEVICE_STATE_ACTIVE;
-        return device;
+        struct device_interface *if_list[] = { if_main, NULL };
+        return shale_device_new_composite_ctx_va(ctx, if_list, id_format, vargs);
 }
-device_t *shale_device_new_composite(struct device_interface *interface[], const uint8_t *id_format, ...);
-device_t *shale_device_new_composite_va(struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
-device_t *shale_device_new_composite_ctx(device_manager_t *ctx, struct device_interface *interface[], const uint8_t *id_format, ...);
+device_t *shale_device_new_composite(struct device_interface *interface[], const uint8_t *id_format, ...)
+{
+        va_list vargs;
+        va_start(vargs, id_format);
+        return shale_device_new_composite_va(interface, id_format, vargs);
+        va_end(vargs);
+}
+device_t *shale_device_new_composite_va(struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
+{
+        return shale_device_new_composite_ctx_va(&manager_default, interface, id_format, vargs);
+}
+device_t *shale_device_new_composite_ctx(device_manager_t *ctx, struct device_interface *interface[], const uint8_t *id_format, ...)
+{
+        va_list vargs;
+        va_start(vargs, id_format);
+        return shale_device_new_composite_ctx_va(ctx, interface, id_format, vargs);
+        va_end(vargs);
+}
 device_t *shale_device_new_composite_ctx_va(device_manager_t *ctx, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
 {
         struct device *device;
@@ -422,6 +459,62 @@ device_t *shale_device_new_composite_ctx_va(device_manager_t *ctx, struct device
                 light_warn("failed to allocate device memory for id pattern '%s'", id_format);
                 return NULL;
         }
+        uint8_t retval;
+        if(retval = shale_device_init_composite_ctx_va(ctx, device, interface, id_format, vargs)) {
+                shale_free(device);
+                return NULL;
+        }
+
+        return device;
+}
+
+uint8_t shale_device_init(struct device *device, struct device_interface *if_main, const uint8_t *id_format, ...)
+{
+        va_list vargs;
+
+        va_start(vargs, id_format);
+        return shale_device_init_va(device, if_main, id_format, vargs);
+        va_end(vargs);
+}
+uint8_t shale_device_init_va(struct device *device, struct device_interface *if_main, const uint8_t *id_format, va_list vargs)
+{
+        return shale_device_init_ctx_va(&manager_default, device, if_main, id_format, vargs);
+}
+uint8_t shale_device_init_ctx(device_manager_t *ctx, struct device *device, struct device_interface *if_main, const uint8_t *id_format, ...)
+{
+        va_list vargs;
+
+        va_start(vargs, id_format);
+        return shale_device_init_ctx_va(ctx, device, if_main, id_format, vargs);
+        va_end(vargs);
+}
+uint8_t shale_device_init_ctx_va(device_manager_t *ctx, struct device *device, struct device_interface *if_main, const uint8_t *id_format, va_list vargs)
+{
+        struct device_interface *if_list[] = { if_main, NULL };
+        return shale_device_init_composite_ctx_va(ctx, device, if_list, id_format, vargs);
+}
+uint8_t shale_device_init_composite(struct device *device, struct device_interface *interface[], const uint8_t *id_format, ...)
+{
+        va_list vargs;
+
+        va_start(vargs, id_format);
+        return shale_device_init_composite_va(device, interface, id_format, vargs);
+        va_end(vargs);
+}
+uint8_t shale_device_init_composite_va(struct device *device, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
+{
+        return shale_device_init_composite_ctx_va(&manager_default, device, interface, id_format, vargs);
+}
+uint8_t shale_device_init_composite_ctx(device_manager_t *ctx, struct device *device, struct device_interface *interface[], const uint8_t *id_format, ...)
+{
+        va_list vargs;
+
+        va_start(vargs, id_format);
+        return shale_device_init_composite_ctx_va(ctx, device, interface, id_format, vargs);
+        va_end(vargs);
+}
+uint8_t shale_device_init_composite_ctx_va(device_manager_t *ctx, struct device *device, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
+{
         light_object_init(&device->header, &ltype_device);
         
         device->state = SHALE_DEVICE_STATE_INIT;
@@ -437,16 +530,15 @@ device_t *shale_device_new_composite_ctx_va(device_manager_t *ctx, struct device
                         shale_interface_put(device->interface[i]);
                 }
                 shale_free(device);
-                return NULL;
+                return retval;
         }
         for(uint8_t i = 0; i < device->if_count; i++) {
-                device->interface[i]->state + SHALE_INTERFACE_STATE_ACTIVE;
+                device->interface[i]->state = SHALE_INTERFACE_STATE_ACTIVE;
                 device->interface[i]->driver->events.add(device->interface[i]);
                 device->interface[i]->driver->driver_class->events.add(device->interface[i]);
-
         }
         device->state = SHALE_DEVICE_STATE_ACTIVE;
-        return device;
+        return LIGHT_OK;
 }
 device_t *shale_device_find(const uint8_t *id)
 {
