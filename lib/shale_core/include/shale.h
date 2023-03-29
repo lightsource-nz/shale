@@ -165,10 +165,9 @@ typedef struct device {
 } device_t;
 typedef struct device_descriptor {
         struct device *object;
-    const uint8_t *id;
-    const struct interface_descriptor *if_main;
-    uint8_t if_count;
-    const struct interface_descriptor **interface;
+        const uint8_t *id;
+        const struct interface_descriptor *if_main;
+        const struct interface_descriptor **interface;
 } device_descriptor_t;
 
 struct sh_event {

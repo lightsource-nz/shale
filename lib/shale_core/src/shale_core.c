@@ -404,7 +404,7 @@ uint8_t shale_device_static_add(const device_descriptor_t *desc)
         struct device *device = desc->object;
         struct device_interface *if_list[SHALE_DEVICE_MAX_INTERFACES + 1];
         uint8_t i;
-        for(i = 0; i < desc->if_count; i++) {
+        for(i = 0; desc->interface[i] != NULL; i++) {
                 if_list[i] = desc->interface[i]->object;
         }
         if_list[i + 1] = NULL;
