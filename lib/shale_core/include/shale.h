@@ -212,11 +212,13 @@ struct sh_event {
         extern const struct device_descriptor _##name##_desc
 
 #define Shale_Static_Device_Define(name, _id, _iface) \
+        static struct device _##name; \
         static const struct interface_descriptor * _## name ##_iface_list[] = { &_if_##_iface##_desc, NULL }; \
         Shale_Static_Device_Define_Multi(name, _id, _iface, _## name ##_iface_list)
 
 #define Shale_Static_Device_Define_Multi(name, _id, _iface, _iface_list) \
         const struct device_descriptor __in_flash(".descriptors") _##name##_desc = { \
+                .object = &_## name, \
                 .id = _id, \
                 .if_main = &_if_##_iface##_desc, \
                 .interface = _iface_list \

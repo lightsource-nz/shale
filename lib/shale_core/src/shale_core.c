@@ -76,21 +76,28 @@ static void shale_load_static_classes()
         for(uint8_t i = 0; i < static_class_count; i++) {
                 shale_class_static_add(static_classes[i]);
         }
-        light_debug("preloaded %d device classes",static_class_count);
+        light_debug("preloaded %d device classes", static_class_count);
 }
 static void shale_load_static_drivers()
 {
         for(uint8_t i = 0; i < static_driver_count; i++) {
                 shale_driver_static_add(static_drivers[i]);
         }
-        light_debug("preloaded %d device drivers",static_driver_count);
+        light_debug("preloaded %d device drivers", static_driver_count);
+}
+static void shale_load_static_interfaces()
+{
+        for(uint8_t i = 0; i < static_interface_count; i++) {
+                 shale_interface_static_add(static_interfaces[i]);
+        }
+        light_debug("preloaded %d interfaces", static_interface_count);
 }
 static void shale_load_static_devices()
 {
         for(uint8_t i = 0; i < static_device_count; i++) {
                 shale_device_static_add(static_devices[i]);
         }
-        light_debug("preloaded %d devices",static_device_count);
+        light_debug("preloaded %d devices", static_device_count);
 }
 #endif
 
@@ -182,6 +189,7 @@ uint8_t shale_init()
         }
         shale_load_static_classes();
         shale_load_static_drivers();
+        shale_load_static_interfaces();
         shale_load_static_devices();
 
         struct class_table *ctable = shale_class_table_main_get();
@@ -294,7 +302,6 @@ uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id)
 
 uint8_t shale_interface_static_add(const struct interface_descriptor *desc)
 {
-        //struct device_interface *interface = shale_interface_new(desc->driver->object, "%s", desc->id);
         struct device_interface *ifx = desc->object;
         uint8_t retval;
         if(retval = shale_interface_init(ifx, desc->driver->object, "%s", desc->id)) {
@@ -523,6 +530,8 @@ uint8_t shale_device_init_composite_ctx_va(device_manager_t *ctx, struct device 
                 device->interface[i] = shale_interface_get(interface[i]);
                 device->if_count++;
         }
+
+        device->if_main = device->interface[0];
         uint8_t retval;
         if(retval = _device_manager_add_device(ctx, device, id_format, vargs)) {
                 light_warn("failed to create new device '%s' at context '%s", id_format, ctx->header.id);
