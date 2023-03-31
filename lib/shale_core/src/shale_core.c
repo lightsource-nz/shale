@@ -88,7 +88,7 @@ static void shale_load_static_drivers()
 static void shale_load_static_interfaces()
 {
         for(uint8_t i = 0; i < static_interface_count; i++) {
-                 shale_interface_static_add(static_interfaces[i]);
+                shale_interface_static_add(static_interfaces[i]);
         }
         light_debug("preloaded %d interfaces", static_interface_count);
 }
@@ -402,15 +402,14 @@ struct device_interface *shale_interface_find_ctx(device_manager_t *ctx, const u
 uint8_t shale_device_static_add(const device_descriptor_t *desc)
 {
         struct device *device = desc->object;
-        struct device_interface *if_list[SHALE_DEVICE_MAX_INTERFACES + 1];
+        struct device_interface *if_list[SHALE_DEVICE_MAX_INTERFACES];
         uint8_t i;
-        for(i = 0; desc->interface[i] != NULL; i++) {
+        for(i = 0; i < desc->if_count; i++) {
                 if_list[i] = desc->interface[i]->object;
         }
-        if_list[i + 1] = NULL;
 
         uint8_t retval;
-        if(retval = shale_device_init_composite(device, if_list, "%s", desc->id)) {
+        if(retval = shale_device_init_composite(device, desc->if_count, if_list, "%s", desc->id)) {
                 return retval;
         }
 
@@ -438,28 +437,28 @@ device_t *shale_device_new_ctx(device_manager_t *ctx, struct device_interface *i
 }
 device_t *shale_device_new_ctx_va(device_manager_t *ctx, struct device_interface *if_main, const uint8_t *id_format, va_list vargs)
 {
-        struct device_interface *if_list[] = { if_main, NULL };
-        return shale_device_new_composite_ctx_va(ctx, if_list, id_format, vargs);
+        struct device_interface *if_list[] = { if_main };
+        return shale_device_new_composite_ctx_va(ctx, 1, if_list, id_format, vargs);
 }
-device_t *shale_device_new_composite(struct device_interface *interface[], const uint8_t *id_format, ...)
+device_t *shale_device_new_composite(uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...)
 {
         va_list vargs;
         va_start(vargs, id_format);
-        return shale_device_new_composite_va(interface, id_format, vargs);
+        return shale_device_new_composite_va(if_count, interface, id_format, vargs);
         va_end(vargs);
 }
-device_t *shale_device_new_composite_va(struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
+device_t *shale_device_new_composite_va(uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
 {
-        return shale_device_new_composite_ctx_va(&manager_default, interface, id_format, vargs);
+        return shale_device_new_composite_ctx_va(&manager_default, if_count, interface, id_format, vargs);
 }
-device_t *shale_device_new_composite_ctx(device_manager_t *ctx, struct device_interface *interface[], const uint8_t *id_format, ...)
+device_t *shale_device_new_composite_ctx(device_manager_t *ctx, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...)
 {
         va_list vargs;
         va_start(vargs, id_format);
-        return shale_device_new_composite_ctx_va(ctx, interface, id_format, vargs);
+        return shale_device_new_composite_ctx_va(ctx, if_count, interface, id_format, vargs);
         va_end(vargs);
 }
-device_t *shale_device_new_composite_ctx_va(device_manager_t *ctx, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
+device_t *shale_device_new_composite_ctx_va(device_manager_t *ctx, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
 {
         struct device *device;
         if(!(device = shale_malloc(sizeof(struct device)))) {
@@ -467,7 +466,7 @@ device_t *shale_device_new_composite_ctx_va(device_manager_t *ctx, struct device
                 return NULL;
         }
         uint8_t retval;
-        if(retval = shale_device_init_composite_ctx_va(ctx, device, interface, id_format, vargs)) {
+        if(retval = shale_device_init_composite_ctx_va(ctx, device, if_count, interface, id_format, vargs)) {
                 shale_free(device);
                 return NULL;
         }
@@ -497,35 +496,35 @@ uint8_t shale_device_init_ctx(device_manager_t *ctx, struct device *device, stru
 }
 uint8_t shale_device_init_ctx_va(device_manager_t *ctx, struct device *device, struct device_interface *if_main, const uint8_t *id_format, va_list vargs)
 {
-        struct device_interface *if_list[] = { if_main, NULL };
-        return shale_device_init_composite_ctx_va(ctx, device, if_list, id_format, vargs);
+        struct device_interface *if_list[] = { if_main };
+        return shale_device_init_composite_ctx_va(ctx, device, 1, if_list, id_format, vargs);
 }
-uint8_t shale_device_init_composite(struct device *device, struct device_interface *interface[], const uint8_t *id_format, ...)
+uint8_t shale_device_init_composite(struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...)
 {
         va_list vargs;
 
         va_start(vargs, id_format);
-        return shale_device_init_composite_va(device, interface, id_format, vargs);
+        return shale_device_init_composite_va(device, if_count, interface, id_format, vargs);
         va_end(vargs);
 }
-uint8_t shale_device_init_composite_va(struct device *device, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
+uint8_t shale_device_init_composite_va(struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
 {
-        return shale_device_init_composite_ctx_va(&manager_default, device, interface, id_format, vargs);
+        return shale_device_init_composite_ctx_va(&manager_default, device, if_count, interface, id_format, vargs);
 }
-uint8_t shale_device_init_composite_ctx(device_manager_t *ctx, struct device *device, struct device_interface *interface[], const uint8_t *id_format, ...)
+uint8_t shale_device_init_composite_ctx(device_manager_t *ctx, struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...)
 {
         va_list vargs;
 
         va_start(vargs, id_format);
-        return shale_device_init_composite_ctx_va(ctx, device, interface, id_format, vargs);
+        return shale_device_init_composite_ctx_va(ctx, device, if_count, interface, id_format, vargs);
         va_end(vargs);
 }
-uint8_t shale_device_init_composite_ctx_va(device_manager_t *ctx, struct device *device, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
+uint8_t shale_device_init_composite_ctx_va(device_manager_t *ctx, struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs)
 {
         light_object_init(&device->header, &ltype_device);
         
         device->state = SHALE_DEVICE_STATE_INIT;
-        for(uint8_t i = 0; interface[i] != NULL; i++) {
+        for(uint8_t i = 0; i < if_count; i++) {
                 // TODO clean up these counted references in release method
                 device->interface[i] = shale_interface_get(interface[i]);
                 device->if_count++;
