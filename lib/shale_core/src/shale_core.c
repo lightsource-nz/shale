@@ -140,11 +140,20 @@ struct device_interface *_interface_lookup(struct device_manager *context, const
 }
 static void _device_release(struct light_object *obj)
 {
-    shale_free(to_device_instance(obj));
+        struct device *device = to_device_instance(obj);
+        for(uint8_t i = 0; i < device->if_count; i++) {
+                shale_interface_put(device->interface[i]);
+        }
+
+        shale_free(device);
 }
 static void _device_manager_release(struct light_object *obj)
 {
-    shale_free(to_device_manager(obj));
+        struct device_manager *devman = to_device_manager(obj);
+#ifdef PICO_RP2040
+        spin_lock_unclaim(devman->mq_lock);
+#endif
+        shale_free(to_device_manager(obj));
 }
 #define SHALE_DESCRIBE_BUFFER_LENGTH 128
 static uint8_t _describe_buffer[SHALE_DESCRIBE_BUFFER_LENGTH];
