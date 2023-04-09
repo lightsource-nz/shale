@@ -2,6 +2,7 @@
 
 #include "class/display.h"
 #include "class/display_internal.h"
+#include "class/iobus.h"
 
 static uint8_t _display_init(struct device_interface *device);
 static uint8_t _display_add(struct device_interface *device);
@@ -12,7 +13,7 @@ static const struct interface_event _display_event = {
         .message = _display_message
 };
 
-Shale_Static_Class_Define(display, CLASS_ID_DISPLAY, _display_event);
+Shale_Static_Class_Define_Ref(display, CLASS_ID_DISPLAY, _display_event, Static_Class_Ref(ref_bus, iobus));
 
 class_t *shale_class_display()
 {

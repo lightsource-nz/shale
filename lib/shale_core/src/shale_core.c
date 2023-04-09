@@ -313,7 +313,7 @@ uint8_t shale_interface_static_add(const struct interface_descriptor *desc)
 {
         struct device_interface *ifx = desc->object;
         uint8_t retval;
-        if(retval = shale_interface_init(ifx, desc->driver->object, "%s", desc->id)) {
+        if(retval = shale_interface_init(ifx, desc->if_driver->object, "%s", desc->id)) {
                 light_debug("shale_interface_init failed with code %s", light_error_to_string(retval));
                 return retval;
         }

@@ -16,9 +16,15 @@ struct interface_event {
         uint8_t (*message)(struct device_interface *, struct message_handle *);
 };
 
+struct class_ref {
+        const uint8_t *id;
+        const struct device_class *ref;
+};
 typedef struct device_class {
     struct light_object header;
     struct interface_event events;
+    uint8_t ref_count;
+    const struct class_ref refs[SHALE_INTERFACE_MAX_REFS];
     uint8_t driver_count;
     driver_t *drivers[SHALE_CLASS_MAX_DRIVERS];
 } class_t;
@@ -28,15 +34,21 @@ typedef struct device_driver {
     const struct lobj_type *interface_ltype;
     struct interface_event events;
 } driver_t;
+
+struct class_ref_descriptor {
+        const uint8_t *id;
+        const struct class_descriptor *ref;
+};
 typedef struct class_descriptor {
     class_t *object;
     const uint8_t *id;
     const struct interface_event events;
+    const struct class_ref_descriptor refs[SHALE_INTERFACE_MAX_REFS];
 } class_descriptor_t;
 typedef struct driver_descriptor {
     driver_t *object;
     const uint8_t *id;
-    const class_descriptor_t *parent;
+    const struct class_descriptor *parent;
     const struct lobj_type *device_type;
     const struct interface_event events;
 } driver_descriptor_t;
@@ -79,9 +91,19 @@ extern struct lobj_type ltype_device_driver;
 #define Shale_Static_Driver(name) \
         extern const driver_descriptor_t _driver_##name##_desc
 
+#define Static_Class_Ref(refid, target) { .id = #refid, .ref = &_class_## target ##_desc }
+
 #define Shale_Static_Class_Define(name, _id, _events) \
+        Shale_Static_Class_Define_Ref(name, _id, _events,)
+
+#define Shale_Static_Class_Define_Ref(name, _id, _events, _refs) \
         static class_t _class_##name; \
-        const class_descriptor_t __in_flash(".descriptors") _class_##name##_desc = { .object = &_class_##name, .id = _id, .events = _events }; \
+        const class_descriptor_t __in_flash(".descriptors") _class_##name##_desc = { \
+                .object = &_class_##name, \
+                .id = _id, \
+                .events = _events, \
+                .refs = { _refs } \
+        }; \
         const class_descriptor_t* __static_class class_##name##_desc = &_class_##name##_desc; \
         Light_Class_Load(name)
 #define Shale_Static_Driver_Define(name, _id, _class, _type, _events) \

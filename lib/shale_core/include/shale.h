@@ -102,7 +102,7 @@
 #define SHALE_QUEUE_DEPTH               8
 
 #define SHALE_DEVICE_MAX_INTERFACES     8
-#define SHALE_INTERFACE_MAX_ATTACHED    16
+#define SHALE_INTERFACE_MAX_REFS        8
 #define SHALE_MANAGER_MAX_INTERFACES    16
 #define SHALE_MANAGER_MAX_DEVICES       16
 #define SHALE_MANAGER_DEFAULT_NAME      "devmgr:default"
@@ -124,6 +124,13 @@
 #define SHALE_INTERFACE_STATE_SUSPEND      2
 #define SHALE_INTERFACE_STATE_ERROR        UINT8_MAX
 
+// codes for interface reference state machine
+#define REF_INIT                0
+#define REF_READY               1
+#define REF_NEGOTIATE           2
+#define REF_ATTACH              3
+#define REF_ERROR               UINT8_MAX
+
 typedef struct device_manager device_manager_t;
 typedef struct device_class class_t;
 typedef struct device_driver driver_t;
@@ -135,6 +142,11 @@ typedef struct shale_message message_t;
 #include "shale/thread.h"
 #include "shale/driver.h"
 
+struct interface_ref {
+        const struct class_ref *ref_type;
+        uint8_t state;
+        struct device_interface *target;
+};
 // TODO provide a platform agnostic message queueing interface which also
 // works in host mode
 typedef struct device_interface {
@@ -146,14 +158,17 @@ typedef struct device_interface {
     struct device_driver *driver;
     uint8_t state;
     uint8_t attach_count;
-    struct device_interface *attached[SHALE_INTERFACE_MAX_ATTACHED];
+    struct interface_ref refs[SHALE_INTERFACE_MAX_REFS];
 } interface_t;
+struct interface_ref_descriptor {
+        uint8_t *id;
+        struct interface_descriptor *ref;
+};
 struct interface_descriptor {
     interface_t *object;
     const uint8_t *id;
-    const struct driver_descriptor *driver;
-    const uint8_t attach_count;
-    const struct interface_descriptor *attached[SHALE_INTERFACE_MAX_ATTACHED];
+    const struct driver_descriptor *if_driver;
+    const struct interface_ref_descriptor refs[SHALE_INTERFACE_MAX_REFS];
 };
 
 typedef struct device {
@@ -196,14 +211,19 @@ struct sh_event {
 #endif
 
 #define Shale_Static_Interface(name) \
-        extern const struct interface_descriptor _##name##_desc
+        extern const struct interface_descriptor _if_##name##_desc; \
+        static const struct interface_descriptor *if_##name##_desc = &_if_##name##_desc
 
 #define Shale_Static_Interface_Define(name, _id, _driver) \
-        static struct _driver##_interface _##name; \
+        Shale_Static_Interface_Define_Ref(name, _id, _driver,)
+
+#define Shale_Static_Interface_Define_Ref(name, _id, _driver, _refs) \
+        struct _driver##_interface _##name; \
         const struct interface_descriptor __in_flash(".descriptors") _if_##name##_desc = { \
                 .object  = &_##name.header.header, \
                 .id = _id, \
-                .driver = &_driver_##_driver##_desc \
+                .if_driver = &_driver_##_driver##_desc, \
+                .refs = { _refs } \
         }; \
         const struct interface_descriptor* __static_interface if_##name##_desc = &_if_##name##_desc; \
         Light_Interface_Load(name)
