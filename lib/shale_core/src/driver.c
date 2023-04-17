@@ -63,7 +63,16 @@ void shale_class_setup()
 }
 uint8_t shale_class_static_add(const class_descriptor_t *desc)
 {
-        shale_class_init(desc->object, desc->id, desc->events);
+        struct class_ref _refs[SHALE_CLASS_MAX_REFS];
+        struct class_ref *refs[SHALE_CLASS_MAX_REFS];
+        uint8_t i;
+        for(i = 0; i < desc->ref_count; i++) {
+                const struct class_ref_descriptor *ref_desc = &desc->refs[i];
+                _refs[i] = (struct class_ref) { .id = ref_desc->id, .ref = ref_desc->ref->object };
+                refs[i] = &_refs[i];
+        }
+
+        shale_class_init(desc->object, desc->id, desc->events, desc->ref_count, refs);
         desc->object->header.is_static = 1;
 }
 uint8_t shale_driver_static_add(const driver_descriptor_t *desc)
@@ -72,7 +81,7 @@ uint8_t shale_driver_static_add(const driver_descriptor_t *desc)
                             desc->events);
         desc->object->header.is_static = 1;
 }
-uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, struct interface_event events)
+uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, struct interface_event events, uint8_t ref_count, struct class_ref *refs[])
 {
     light_object_init(&class_obj->header, &ltype_device_class);
     class_obj->events = events;

@@ -1,7 +1,9 @@
 #include <shale.h>
+
 #include <class/display.h>
-#include <driver/sh1107.h>
 #include <class/iobus.h>
+
+#include <driver/sh1107.h>
 #include <driver/bus_spi_8.h>
 #include <driver/bus_spi_32.h>
 
@@ -14,7 +16,7 @@
 
 Shale_Static_Interface_Define(if_bus_spi_0, "interface:" ID_BUS_SPI_0, bus_spi_32)
 Shale_Static_Interface_Define(if_bus_spi_1, "interface:" ID_BUS_SPI_1, bus_spi_8)
-Shale_Static_Interface_Define(if_display_main, "interface:" ID_DISPLAY_MAIN, sh1107)
+Shale_Static_Interface_Define_Ref(if_display_main, "interface:" ID_DISPLAY_MAIN, sh1107, 1, Static_Interface_Ref(ref_bus, if_bus_spi_1))
 
 // we use the variant of the SPI driver with a 32-bit frame size
 Shale_Static_Device_Define(bus_spi_0, "device:" ID_BUS_SPI_0, if_bus_spi_0)

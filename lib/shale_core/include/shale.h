@@ -102,7 +102,8 @@
 #define SHALE_QUEUE_DEPTH               8
 
 #define SHALE_DEVICE_MAX_INTERFACES     8
-#define SHALE_INTERFACE_MAX_REFS        8
+#define SHALE_CLASS_MAX_REFS            8
+#define SHALE_INTERFACE_MAX_REFS        SHALE_CLASS_MAX_REFS
 #define SHALE_MANAGER_MAX_INTERFACES    16
 #define SHALE_MANAGER_MAX_DEVICES       16
 #define SHALE_MANAGER_DEFAULT_NAME      "devmgr:default"
@@ -143,7 +144,8 @@ typedef struct shale_message message_t;
 #include "shale/driver.h"
 
 struct interface_ref {
-        const struct class_ref *ref_type;
+        const struct device_class *ref_type;
+        const uint8_t *ref_id;
         uint8_t state;
         struct device_interface *target;
 };
@@ -157,17 +159,18 @@ typedef struct device_interface {
     struct light_object header;
     struct device_driver *driver;
     uint8_t state;
-    uint8_t attach_count;
+    uint8_t ref_count;
     struct interface_ref refs[SHALE_INTERFACE_MAX_REFS];
 } interface_t;
 struct interface_ref_descriptor {
-        uint8_t *id;
-        struct interface_descriptor *ref;
+        uint8_t *ref_id;
+        const struct interface_descriptor *ref;
 };
 struct interface_descriptor {
     interface_t *object;
     const uint8_t *id;
     const struct driver_descriptor *if_driver;
+    const uint8_t ref_count;
     const struct interface_ref_descriptor refs[SHALE_INTERFACE_MAX_REFS];
 };
 
@@ -214,15 +217,18 @@ struct sh_event {
         extern const struct interface_descriptor _if_##name##_desc; \
         static const struct interface_descriptor *if_##name##_desc = &_if_##name##_desc
 
-#define Shale_Static_Interface_Define(name, _id, _driver) \
-        Shale_Static_Interface_Define_Ref(name, _id, _driver,)
+#define Static_Interface_Ref(refid, target) { .ref_id = #refid, .ref = &_if_## target ##_desc }
 
-#define Shale_Static_Interface_Define_Ref(name, _id, _driver, _refs) \
+#define Shale_Static_Interface_Define(name, _id, _driver) \
+        Shale_Static_Interface_Define_Ref(name, _id, _driver, 0,)
+
+#define Shale_Static_Interface_Define_Ref(name, _id, _driver, _ref_count, _refs) \
         struct _driver##_interface _##name; \
         const struct interface_descriptor __in_flash(".descriptors") _if_##name##_desc = { \
                 .object  = &_##name.header.header, \
                 .id = _id, \
                 .if_driver = &_driver_##_driver##_desc, \
+                .ref_count = _ref_count, \
                 .refs = { _refs } \
         }; \
         const struct interface_descriptor* __static_interface if_##name##_desc = &_if_##name##_desc; \
@@ -285,6 +291,14 @@ extern struct device_interface *shale_interface_new(driver_t *driver, const uint
 extern struct device_interface *shale_interface_new_va(driver_t *driver, const uint8_t *id_format, va_list vargs);
 extern struct device_interface *shale_interface_new_ctx(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, ...);
 extern struct device_interface *shale_interface_new_ctx_va(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, va_list vargs);
+extern uint8_t shale_interface_init_ref(struct device_interface *ifx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, ...);
+extern uint8_t shale_interface_init_ref_va(struct device_interface *ifx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs);
+extern uint8_t shale_interface_init_ref_ctx(device_manager_t *ctx, struct device_interface *ifx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, ...);
+extern uint8_t shale_interface_init_ref_ctx_va(device_manager_t *ctx, struct device_interface *ifx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs);
+extern struct device_interface *shale_interface_new_ref(driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, ...);
+extern struct device_interface *shale_interface_new_ref_va(driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs);
+extern struct device_interface *shale_interface_new_ref_ctx(device_manager_t *ctx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, ...);
+extern struct device_interface *shale_interface_new_ref_ctx_va(device_manager_t *ctx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs);
 extern struct device_interface *shale_interface_find(const uint8_t *id);
 extern struct device_interface *shale_interface_find_ctx(device_manager_t *ctx, const uint8_t *id);
 static inline struct device_interface *shale_interface_get(struct device_interface *iface)

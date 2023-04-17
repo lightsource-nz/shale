@@ -43,6 +43,7 @@ typedef struct class_descriptor {
     class_t *object;
     const uint8_t *id;
     const struct interface_event events;
+    const uint8_t ref_count;
     const struct class_ref_descriptor refs[SHALE_INTERFACE_MAX_REFS];
 } class_descriptor_t;
 typedef struct driver_descriptor {
@@ -94,14 +95,15 @@ extern struct lobj_type ltype_device_driver;
 #define Static_Class_Ref(refid, target) { .id = #refid, .ref = &_class_## target ##_desc }
 
 #define Shale_Static_Class_Define(name, _id, _events) \
-        Shale_Static_Class_Define_Ref(name, _id, _events,)
+        Shale_Static_Class_Define_Ref(name, _id, _events, 0,)
 
-#define Shale_Static_Class_Define_Ref(name, _id, _events, _refs) \
+#define Shale_Static_Class_Define_Ref(name, _id, _events, _ref_count, _refs) \
         static class_t _class_##name; \
         const class_descriptor_t __in_flash(".descriptors") _class_##name##_desc = { \
                 .object = &_class_##name, \
                 .id = _id, \
                 .events = _events, \
+                .ref_count = _ref_count, \
                 .refs = { _refs } \
         }; \
         const class_descriptor_t* __static_class class_##name##_desc = &_class_##name##_desc; \
@@ -116,9 +118,9 @@ extern void shale_class_setup();
 extern struct class_table *shale_class_table_main_get();
 extern uint8_t shale_class_static_add(const class_descriptor_t *desc);
 extern uint8_t shale_driver_static_add(const driver_descriptor_t *desc);
-extern uint8_t shale_class_init(class_t *_class, const uint8_t *id, struct interface_event events);
+extern uint8_t shale_class_init(class_t *_class, const uint8_t *id, struct interface_event events, uint8_t ref_count, struct class_ref *refs[]);
 extern uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id,
-                                    const struct lobj_type *dev_type, struct interface_event events);
+                                    const struct lobj_type *ifx_type, struct interface_event events);
 extern class_t *shale_class_find(uint8_t *id);
 extern class_t *shale_class_find_ctx(struct class_table *ctx, uint8_t *id);
 extern driver_t *shale_driver_find(class_t *_class, uint8_t *id);
