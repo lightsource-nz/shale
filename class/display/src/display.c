@@ -13,7 +13,8 @@ static const struct interface_event _display_event = {
         .message = _display_message
 };
 
-Shale_Static_Class_Define_Ref(display, CLASS_ID_DISPLAY, _display_event, 1, Static_Class_Ref(ref_bus, iobus));
+Shale_Static_Class_Define_Ref(display, CLASS_ID_DISPLAY, _display_event, 1,
+                                        Static_Class_Ref(ref_bus, iobus));
 
 class_t *shale_class_display()
 {
