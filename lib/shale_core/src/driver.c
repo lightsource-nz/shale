@@ -5,9 +5,11 @@
 
 #define LTYPE_CLASS_TABLE_NAME "class_table"
 
-DefCommand(Interface_Query);
-DefCommand(Interface_AttachConsumer);
-DefCommand(Interface_SetConsumeTarget); 
+DefQuery(Interface_Describe);
+DefState(Interface_State);
+
+DefCommand(Interface_DoSetRef);
+DefEvent(Interface_SetRef);
 
 DefEvent(Interface_Describe);
 DefEvent(Interface_ConsumerAttached);
@@ -60,6 +62,7 @@ static void _device_driver_release(struct light_object *obj)
 void shale_class_setup()
 {
     light_object_init(&class_table_global.header, &ltype_class_table);
+    class_table_global.count = 0;
 }
 uint8_t shale_class_static_add(const class_descriptor_t *desc)
 {
