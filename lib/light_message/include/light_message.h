@@ -57,5 +57,4 @@ static inline bool light_message_is_state(struct light_message *msg)
         return msg->type->meta == MSG_STATE;
 }
 
-
 #endif
