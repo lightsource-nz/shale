@@ -5,6 +5,12 @@
 
 #define LTYPE_CLASS_TABLE_NAME "class_table"
 
+DefQuery(Interface_Describe);
+DefState(Interface_State);
+
+DefCommand(Interface_DoSetRef);
+DefEvent(Interface_SetRef);
+
 static void _class_table_child_add(struct light_object *obj, struct light_object *child);
 static void _class_table_child_remove(struct light_object *obj, struct light_object *child);
 struct lobj_type ltype_class_table = {
@@ -53,19 +59,29 @@ static void _device_driver_release(struct light_object *obj)
 void shale_class_setup()
 {
     light_object_init(&class_table_global.header, &ltype_class_table);
+    class_table_global.count = 0;
 }
 uint8_t shale_class_static_add(const class_descriptor_t *desc)
 {
-        shale_class_init(desc->object, desc->id, desc->events);
+        struct class_ref _refs[SHALE_CLASS_MAX_REFS];
+        struct class_ref *refs[SHALE_CLASS_MAX_REFS];
+        uint8_t i;
+        for(i = 0; i < desc->ref_count; i++) {
+                const struct class_ref_descriptor *ref_desc = &desc->refs[i];
+                _refs[i] = (struct class_ref) { .id = ref_desc->id, .ref = ref_desc->ref->object };
+                refs[i] = &_refs[i];
+        }
+
+        shale_class_init(desc->object, desc->id, desc->events, desc->ref_count, refs);
         desc->object->header.is_static = 1;
 }
 uint8_t shale_driver_static_add(const driver_descriptor_t *desc)
 {
-        shale_driver_init(desc->object, desc->parent->object, desc->id, desc->device_type,
-                            desc->events);
+        shale_driver_init(desc->object, desc->parent->object, desc->id, desc->ifx_ltype,
+                            desc->ifx_alloc, desc->ifx_free, desc->events);
         desc->object->header.is_static = 1;
 }
-uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, struct device_event events)
+uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, struct interface_event events, uint8_t ref_count, struct class_ref *refs[])
 {
     light_object_init(&class_obj->header, &ltype_device_class);
     class_obj->events = events;
@@ -96,15 +112,16 @@ uint8_t _class_add_driver(class_t *_class, driver_t *driver, const uint8_t *id)
     _class->drivers[_class->driver_count++] = driver;
     return SHALE_SUCCESS;
 }
-uint8_t shale_driver_init(driver_t *driver_obj, class_t *drv_class, const uint8_t *id,
-                                    const struct lobj_type *dev_type, struct device_event events)
+uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id,
+                                    const struct lobj_type *ifx_type, struct device_interface *(*ifx_alloc)(),
+                                    void (*ifx_free)(struct device_interface *), struct interface_event events)
 {
     assert_class(drv_class);
-    light_object_init(&driver_obj->header, &ltype_device_driver);
-    driver_obj->driver_class = shale_class_get(drv_class);
-    driver_obj->device_type = dev_type;
-    driver_obj->events = events;
-    uint8_t status = _driver_register(driver_obj, id);
+    light_object_init(&driver->header, &ltype_device_driver);
+    driver->driver_class = shale_class_get(drv_class);
+    driver->ifx_ltype = ifx_type;
+    driver->events = events;
+    uint8_t status = _driver_register(driver, id);
     if(status) {
         //TODO log error
         shale_class_put(drv_class);
@@ -139,11 +156,11 @@ driver_t *shale_driver_find(class_t *_class, uint8_t *id)
         }
         return NULL;
 }
-void shale_class_deliver_message(class_t *target, device_t *device, message_handle_t *msg)
+void shale_class_deliver_message(class_t *target, struct device_interface *iface, message_handle_t *msg)
 {
-    target->events.message(device, msg);
+    target->events.message(iface, msg);
 }
-void shale_driver_deliver_message(driver_t *target, device_t *device, message_handle_t *msg);
+void shale_driver_deliver_message(driver_t *target, struct device_interface *iface, message_handle_t *msg);
 
 class_t *_class_lookup(uint8_t *id)
 {

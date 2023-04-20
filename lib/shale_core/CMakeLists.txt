@@ -34,5 +34,6 @@ target_link_libraries(
     shale_core
     INTERFACE
     light_object
+    light_message
 )
 

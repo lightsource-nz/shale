@@ -351,7 +351,7 @@ uint8_t shale_interface_init_ctx(device_manager_t *ctx, struct device_interface 
 }
 uint8_t shale_interface_init_ctx_va(device_manager_t *ctx, struct device_interface *ifx, driver_t *driver, const uint8_t *id_format, va_list vargs)
 {
-        light_object_init(&ifx->header, driver->ifx_ltype);
+        light_object_init(&ifx->header, driver->interface_ltype);
 #ifdef PICO_RP2040
         queue_init_with_spinlock(&interface->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, ctx->mq_lock);
 #endif
@@ -414,7 +414,7 @@ uint8_t shale_interface_init_ref_ctx(device_manager_t *ctx, struct device_interf
 }
 uint8_t shale_interface_init_ref_ctx_va(device_manager_t *ctx, struct device_interface *ifx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs)
 {
-        light_object_init(&ifx->header, driver->ifx_ltype);
+        light_object_init(&ifx->header, driver->interface_ltype);
 #ifdef PICO_RP2040
         queue_init_with_spinlock(&interface->queue,sizeof(message_handle_t), SHALE_QUEUE_DEPTH, ctx->mq_lock);
 #endif
@@ -459,7 +459,7 @@ struct device_interface *shale_interface_new_ref_ctx(device_manager_t *ctx, driv
 struct device_interface *shale_interface_new_ref_ctx_va(device_manager_t *ctx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs)
 {
         struct device_interface *ifx;
-        if(!(ifx = driver->ifx_alloc())) {
+        if(!(ifx = driver->events.alloc())) {
                 light_warn("failed to allocate memory for interface with id pattern '%s'", id_format);
                 return NULL;
         }
@@ -467,7 +467,7 @@ struct device_interface *shale_interface_new_ref_ctx_va(device_manager_t *ctx, d
         uint8_t retval;
         if(retval = shale_interface_init_ref_ctx_va(ctx, ifx, driver, ref_count, refs, id_format, vargs)) {
                 light_warn("failed to initialize new interface with id pattern '%s': %s", id_format, light_error_to_string(retval));
-                driver->ifx_free(ifx);
+                driver->events.free(ifx);
                 return NULL;
         }
         return ifx;

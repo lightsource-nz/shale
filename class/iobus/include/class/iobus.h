@@ -20,22 +20,22 @@ enum iobus_msg {
 
 Shale_Static_Class(iobus);
 
-struct iobus_device {
-        struct device header;
+struct iobus_interface {
+        struct device_interface header;
         uint8_t frame_size;
         uint8_t bus_protocol;
         struct iobus_consumer *consumer;
 };
 
 struct iobus_consumer {
-        struct iobus_device *target;
-        void (*consume)(struct event *);
+        struct iobus_interface *target;
+        void (*consume)(struct device_interface, struct shale_message *);
 };
 
-#define to_iobus_device(ptr) container_of(ptr, struct iobus_device, header)
-#define lobject_to_iobus_device(ptr) to_iobus_device(to_device_instance(ptr))
+#define to_iobus_interface(ptr) container_of(ptr, struct iobus_interface, header)
+#define lobject_to_iobus_interface(ptr) to_iobus_interface(to_device_interface(ptr))
 
-uint8_t shale_class_iobus_device_init(struct iobus_device *device, driver_t *driver, struct lobj_type *type, const uint8_t *id);
+uint8_t shale_class_iobus_interface_init(struct iobus_interface *interface, struct device_driver *driver, struct lobj_type *type, const uint8_t *id);
 class_t *shale_class_iobus();
 
 #endif

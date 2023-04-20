@@ -14,14 +14,15 @@
 #define MXS_RECEIVED        0x02
 #define MXS_RESPONDED       0x03
 #define MXS_ERROR           0xFF
-
+  
 #define mx(target, id) mx_p(target, id, NULL)
 #define mx_p(target, id, param) \
     shale_message_send((message_t){target, id, param})
 
 typedef struct device device_t;
 
-typedef struct message {
+typedef struct shale_message {
+    struct light_message header;
     device_t *target;
     uint8_t msg_id;
     void *param[];
