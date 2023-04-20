@@ -19,13 +19,11 @@ static uint8_t _spi_8_init(struct device_interface *device);
 static uint8_t _spi_8_add(struct device_interface *device);
 static uint8_t _spi_8_msg(struct device_interface *device, message_handle_t *handle);
 static const struct interface_event _spi_8_event = {
-        .alloc = _spi_8_interface_alloc,
-        .free = _spi_8_interface_free,
         .init = _spi_8_init,
         .add = _spi_8_add,
         .message = _spi_8_msg
 };
-Shale_Static_Driver_Define(bus_spi_8, DRIVER_ID_BUS_SPI_8, class_iobus, &_spi_8_ltype, _spi_8_event);
+Shale_Static_Driver_Define(bus_spi_8, DRIVER_ID_BUS_SPI_8, class_iobus, &_spi_8_ltype, _spi_8_interface_alloc, _spi_8_interface_free, _spi_8_event);
 //driver_t *driver_bus_spi_8;
 
 driver_t *shale_driver_bus_spi_8()

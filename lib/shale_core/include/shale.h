@@ -142,37 +142,8 @@ typedef struct shale_message message_t;
 #include "shale/message.h"
 #include "shale/thread.h"
 #include "shale/driver.h"
-
-struct interface_ref {
-        const struct device_class *ref_type;
-        const uint8_t *ref_id;
-        uint8_t state;
-        struct device_interface *target;
-};
-// TODO provide a platform agnostic message queueing interface which also
-// works in host mode
-typedef struct device_interface {
-#ifdef PICO_RP2040
-    queue_t queue;
-#endif
-    struct device *parent;
-    struct light_object header;
-    struct device_driver *driver;
-    uint8_t state;
-    uint8_t ref_count;
-    struct interface_ref refs[SHALE_INTERFACE_MAX_REFS];
-} interface_t;
-struct interface_ref_descriptor {
-        uint8_t *ref_id;
-        const struct interface_descriptor *ref;
-};
-struct interface_descriptor {
-    interface_t *object;
-    const uint8_t *id;
-    const struct driver_descriptor *if_driver;
-    const uint8_t ref_count;
-    const struct interface_ref_descriptor refs[SHALE_INTERFACE_MAX_REFS];
-};
+#include "shale/interface.h"
+#include "shale/static.h"
 
 typedef struct device {
     struct light_object header;
@@ -181,83 +152,10 @@ typedef struct device {
     uint8_t if_count;
     struct device_interface *interface[SHALE_DEVICE_MAX_INTERFACES];
 } device_t;
-typedef struct device_descriptor {
-        struct device *object;
-        const uint8_t *id;
-        const struct interface_descriptor *if_main;
-        const uint8_t if_count;
-        const struct interface_descriptor *interface[SHALE_DEVICE_MAX_INTERFACES];
-} device_descriptor_t;
 
-struct sh_event {
-    struct light_message header;
-    uint16_t id;
-    struct interface *source;
-};
-
-#ifdef PICO_RP2040
-#define __static_interface __section(".shaledata.interfaces")
-#define Light_Interface_Load(name)
-#define __static_device __section(".shaledata.devices")
-#define Light_Device_Load(name)
-#else
-#define __static_interface
-#define __static_device
-#define Light_Interface_Load(name) \
-        extern uint8_t static_interface_count; \
-        extern const struct interface_descriptor *static_interfaces[]; \
-        void __attribute__((constructor)) _load_##name() { static_interfaces[static_interface_count++] = if_## name ##_desc; }
-#define Light_Device_Load(name) \
-        extern uint8_t static_device_count; \
-        extern const struct device_descriptor *static_devices[]; \
-        void __attribute__((constructor)) _load_##name() { static_devices[static_device_count++] = name##_desc; }
-#endif
-
-#define Shale_Static_Interface(name) \
-        extern const struct interface_descriptor _if_##name##_desc; \
-        static const struct interface_descriptor *if_##name##_desc = &_if_##name##_desc
-
-#define Static_Interface_Ref(refid, target) { .ref_id = #refid, .ref = &_if_## target ##_desc }
-
-#define Shale_Static_Interface_Define(name, _id, _driver) \
-        Shale_Static_Interface_Define_Ref(name, _id, _driver, 0,)
-
-#define Shale_Static_Interface_Define_Ref(name, _id, _driver, _ref_count, _refs) \
-        struct _driver##_interface _##name; \
-        const struct interface_descriptor __in_flash(".descriptors") _if_##name##_desc = { \
-                .object  = &_##name.header.header, \
-                .id = _id, \
-                .if_driver = &_driver_##_driver##_desc, \
-                .ref_count = _ref_count, \
-                .refs = { _refs } \
-        }; \
-        const struct interface_descriptor* __static_interface if_##name##_desc = &_if_##name##_desc; \
-        Light_Interface_Load(name)
-
-#define Shale_Static_Device(name) \
-        extern const struct device_descriptor _##name##_desc
-
-#define Shale_Static_Device_Define(name, _id, _iface) \
-        static struct device _##name; \
-        static const struct interface_descriptor * _## name ##_iface_list[] = { &_if_##_iface##_desc }; \
-        Shale_Static_Device_Define_Composite(name, _id, _iface, 1, ( &_if_##_iface##_desc ))
-
-#define Shale_Static_Device_Define_Composite(name, _id, _iface, _if_count, _iface_list) \
-        const struct device_descriptor __in_flash(".descriptors") _##name##_desc = { \
-                .object = &_## name, \
-                .id = _id, \
-                .if_main = &_if_##_iface##_desc, \
-                .if_count = _if_count, \
-                .interface = { _iface_list } \
-        }; \
-        const device_descriptor_t* __static_device name##_desc = &_##name##_desc; \
-        Light_Device_Load(name)
-
-extern struct lobj_type ltype_interface;
 extern struct lobj_type ltype_device;
 extern struct lobj_type ltype_device_manager;
 
-#define to_device_interface(object) container_of(object, interface_t, header)
 #define to_device_instance(object) container_of(object, device_t, header)
 #define to_device_manager(object) container_of(object, device_manager_t, header)
 
@@ -282,58 +180,26 @@ extern uint8_t *shale_driver_describe(struct device_driver *driver);
 extern uint8_t *shale_interface_describe(struct device_interface *iface);
 extern uint8_t *shale_device_describe(struct device *device);
 
-extern uint8_t shale_interface_static_add(const struct interface_descriptor *desc);
-extern uint8_t shale_interface_init(struct device_interface *ifx, driver_t *driver, const uint8_t *id_format, ...);
-extern uint8_t shale_interface_init_va(struct device_interface *ifx, driver_t *driver, const uint8_t *id_format, va_list vargs);
-extern uint8_t shale_interface_init_ctx(device_manager_t *ctx, struct device_interface *ifx, driver_t *driver, const uint8_t *id_format, ...);
-extern uint8_t shale_interface_init_ctx_va(device_manager_t *ctx, struct device_interface *ifx, driver_t *driver, const uint8_t *id_format, va_list vargs);
-extern struct device_interface *shale_interface_new(driver_t *driver, const uint8_t *id_format, ...);
-extern struct device_interface *shale_interface_new_va(driver_t *driver, const uint8_t *id_format, va_list vargs);
-extern struct device_interface *shale_interface_new_ctx(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, ...);
-extern struct device_interface *shale_interface_new_ctx_va(device_manager_t *ctx, driver_t *driver, const uint8_t *id_format, va_list vargs);
-extern uint8_t shale_interface_init_ref(struct device_interface *ifx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, ...);
-extern uint8_t shale_interface_init_ref_va(struct device_interface *ifx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs);
-extern uint8_t shale_interface_init_ref_ctx(device_manager_t *ctx, struct device_interface *ifx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, ...);
-extern uint8_t shale_interface_init_ref_ctx_va(device_manager_t *ctx, struct device_interface *ifx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs);
-extern struct device_interface *shale_interface_new_ref(driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, ...);
-extern struct device_interface *shale_interface_new_ref_va(driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs);
-extern struct device_interface *shale_interface_new_ref_ctx(device_manager_t *ctx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, ...);
-extern struct device_interface *shale_interface_new_ref_ctx_va(device_manager_t *ctx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs);
-extern struct device_interface *shale_interface_find(const uint8_t *id);
-extern struct device_interface *shale_interface_find_ctx(device_manager_t *ctx, const uint8_t *id);
-static inline struct device_interface *shale_interface_get(struct device_interface *iface)
-{
-        return to_device_interface(light_object_get(&iface->header));
-}
-static inline void shale_interface_put(struct device_interface *iface)
-{
-        light_object_put(&iface->header);
-}
+extern uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id);
+extern uint8_t shale_device_init(struct device *device, struct device_interface *if_main, const uint8_t *id_format, ...);
+extern uint8_t shale_device_init_va(struct device *device, struct device_interface *if_main, const uint8_t *id_format, va_list vargs);
+extern uint8_t shale_device_init_ctx(device_manager_t *ctx, struct device *device, struct device_interface *if_main, const uint8_t *id_format, ...);
+extern uint8_t shale_device_init_ctx_va(device_manager_t *ctx, struct device *device, struct device_interface *if_main, const uint8_t *id_format, va_list vargs);
+extern uint8_t shale_device_init_composite(struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...);
+extern uint8_t shale_device_init_composite_va(struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
+extern uint8_t shale_device_init_composite_ctx(device_manager_t *ctx, struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...);
+extern uint8_t shale_device_init_composite_ctx_va(device_manager_t *ctx, struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
+extern device_t *shale_device_new(struct device_interface *if_main, const uint8_t *id_format, ...);
+extern device_t *shale_device_new_va(struct device_interface *if_main, const uint8_t *id_format, va_list vargs);
+extern device_t *shale_device_new_ctx(device_manager_t *ctx, struct device_interface *if_main, const uint8_t *id_format, ...);
+extern device_t *shale_device_new_ctx_va(device_manager_t *ctx, struct device_interface *if_main, const uint8_t *id_format, va_list vargs);
+extern device_t *shale_device_new_composite(uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...);
+extern device_t *shale_device_new_composite_va(uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
+extern device_t *shale_device_new_composite_ctx(device_manager_t *ctx, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...);
+extern device_t *shale_device_new_composite_ctx_va(device_manager_t *ctx, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
+extern device_t *shale_device_find(const uint8_t *id);
+extern device_t *shale_device_find_ctx(device_manager_t *ctx, const uint8_t *id);
 
-static inline const uint8_t *shale_interface_name(struct device_interface *iface)
-{
-        return light_object_get_name(&iface->header);
-}
-extern uint8_t shale_device_static_add(const device_descriptor_t *desc);
-uint8_t shale_device_manager_init(device_manager_t *devmgr, const uint8_t *id);
-uint8_t shale_device_init(struct device *device, struct device_interface *if_main, const uint8_t *id_format, ...);
-uint8_t shale_device_init_va(struct device *device, struct device_interface *if_main, const uint8_t *id_format, va_list vargs);
-uint8_t shale_device_init_ctx(device_manager_t *ctx, struct device *device, struct device_interface *if_main, const uint8_t *id_format, ...);
-uint8_t shale_device_init_ctx_va(device_manager_t *ctx, struct device *device, struct device_interface *if_main, const uint8_t *id_format, va_list vargs);
-uint8_t shale_device_init_composite(struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...);
-uint8_t shale_device_init_composite_va(struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
-uint8_t shale_device_init_composite_ctx(device_manager_t *ctx, struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...);
-uint8_t shale_device_init_composite_ctx_va(device_manager_t *ctx, struct device *device, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
-device_t *shale_device_new(struct device_interface *if_main, const uint8_t *id_format, ...);
-device_t *shale_device_new_va(struct device_interface *if_main, const uint8_t *id_format, va_list vargs);
-device_t *shale_device_new_ctx(device_manager_t *ctx, struct device_interface *if_main, const uint8_t *id_format, ...);
-device_t *shale_device_new_ctx_va(device_manager_t *ctx, struct device_interface *if_main, const uint8_t *id_format, va_list vargs);
-device_t *shale_device_new_composite(uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...);
-device_t *shale_device_new_composite_va(uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
-device_t *shale_device_new_composite_ctx(device_manager_t *ctx, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...);
-device_t *shale_device_new_composite_ctx_va(device_manager_t *ctx, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
-device_t *shale_device_find(const uint8_t *id);
-device_t *shale_device_find_ctx(device_manager_t *ctx, const uint8_t *id);
 static inline device_t *shale_device_get(device_t *device)
 {
         return to_device_instance(light_object_get(&device->header));

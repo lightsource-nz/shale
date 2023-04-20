@@ -20,14 +20,12 @@ static uint8_t _spi_32_init(struct device_interface *ifx_header);
 static uint8_t _spi_32_add(struct device_interface *ifx_header);
 static uint8_t _spi_32_msg(struct device_interface *ifx_header, message_handle_t *handle);
 static const struct interface_event _spi_32_event = {
-        .alloc = _spi_32_interface_alloc,
-        .free = _spi_32_interface_free,
         .init = _spi_32_init,
         .add = _spi_32_add,
         .message = _spi_32_msg
 };
 
-Shale_Static_Driver_Define(bus_spi_32, DRIVER_ID_BUS_SPI_32, class_iobus, &_ltype_spi_32_interface, _spi_32_event);
+Shale_Static_Driver_Define(bus_spi_32, DRIVER_ID_BUS_SPI_32, class_iobus, &_ltype_spi_32_interface, _spi_32_interface_alloc, _spi_32_interface_free, _spi_32_event);
 
 struct device_driver *shale_driver_bus_spi_32()
 {

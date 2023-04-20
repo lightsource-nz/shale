@@ -28,14 +28,19 @@ static uint8_t _sh1107_init(struct device_interface *device);
 static uint8_t _sh1107_add(struct device_interface *device);
 static uint8_t _sh1107_msg(struct device_interface *device, message_handle_t *handle);
 static const struct interface_event _sh1107_event = {
-        .alloc = _sh1107_interface_alloc,
-        .free = _sh1107_interface_free,
         .init = _sh1107_init,
         .add = _sh1107_add,
         .message = _sh1107_msg
 };
 
-Shale_Static_Driver_Define(sh1107, DRIVER_ID_SH1107, class_display, &_ltype_sh1107_interface, _sh1107_event);
+Shale_Static_Driver_Define(
+                        sh1107,
+                        DRIVER_ID_SH1107,
+                        class_display,
+                        &_ltype_sh1107_interface,
+                        _sh1107_interface_alloc,
+                        _sh1107_interface_free,
+                        _sh1107_event);
 //driver_t *driver_sh1107;
 
 driver_t *shale_driver_sh1107()

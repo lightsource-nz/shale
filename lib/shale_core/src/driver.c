@@ -11,9 +11,6 @@ DefState(Interface_State);
 DefCommand(Interface_DoSetRef);
 DefEvent(Interface_SetRef);
 
-DefEvent(Interface_Describe);
-DefEvent(Interface_ConsumerAttached);
-
 static void _class_table_child_add(struct light_object *obj, struct light_object *child);
 static void _class_table_child_remove(struct light_object *obj, struct light_object *child);
 struct lobj_type ltype_class_table = {
@@ -80,8 +77,8 @@ uint8_t shale_class_static_add(const class_descriptor_t *desc)
 }
 uint8_t shale_driver_static_add(const driver_descriptor_t *desc)
 {
-        shale_driver_init(desc->object, desc->parent->object, desc->id, desc->device_type,
-                            desc->events);
+        shale_driver_init(desc->object, desc->parent->object, desc->id, desc->ifx_ltype,
+                            desc->ifx_alloc, desc->ifx_free, desc->events);
         desc->object->header.is_static = 1;
 }
 uint8_t shale_class_init(class_t *class_obj, const uint8_t *id, struct interface_event events, uint8_t ref_count, struct class_ref *refs[])
@@ -115,15 +112,16 @@ uint8_t _class_add_driver(class_t *_class, driver_t *driver, const uint8_t *id)
     _class->drivers[_class->driver_count++] = driver;
     return SHALE_SUCCESS;
 }
-uint8_t shale_driver_init(driver_t *driver_obj, class_t *drv_class, const uint8_t *id,
-                                    const struct lobj_type *dev_type, struct interface_event events)
+uint8_t shale_driver_init(driver_t *driver, class_t *drv_class, const uint8_t *id,
+                                    const struct lobj_type *ifx_type, struct device_interface *(*ifx_alloc)(),
+                                    void (*ifx_free)(struct device_interface *), struct interface_event events)
 {
     assert_class(drv_class);
-    light_object_init(&driver_obj->header, &ltype_device_driver);
-    driver_obj->driver_class = shale_class_get(drv_class);
-    driver_obj->interface_ltype = dev_type;
-    driver_obj->events = events;
-    uint8_t status = _driver_register(driver_obj, id);
+    light_object_init(&driver->header, &ltype_device_driver);
+    driver->driver_class = shale_class_get(drv_class);
+    driver->ifx_ltype = ifx_type;
+    driver->events = events;
+    uint8_t status = _driver_register(driver, id);
     if(status) {
         //TODO log error
         shale_class_put(drv_class);
