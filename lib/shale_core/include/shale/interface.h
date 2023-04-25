@@ -74,8 +74,6 @@ extern struct device_interface *shale_interface_new_ref(driver_t *driver, uint8_
 extern struct device_interface *shale_interface_new_ref_va(driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs);
 extern struct device_interface *shale_interface_new_ref_ctx(device_manager_t *ctx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, ...);
 extern struct device_interface *shale_interface_new_ref_ctx_va(device_manager_t *ctx, driver_t *driver, uint8_t ref_count, struct interface_ref *refs[], const uint8_t *id_format, va_list vargs);
-extern struct device_interface *shale_interface_find(const uint8_t *id);
-extern struct device_interface *shale_interface_find_ctx(device_manager_t *ctx, const uint8_t *id);
 
 static inline struct device_interface *shale_interface_get(struct device_interface *iface)
 {

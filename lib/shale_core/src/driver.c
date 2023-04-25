@@ -46,7 +46,7 @@ static void _class_table_child_remove(struct light_object *obj, struct light_obj
 {
     struct class_table *ctable = to_class_table(obj);
     class_t *_class = to_device_class(child);
-    _list_delete_item((void **)&ctable->classes, &ctable->count, _class);
+    light_arraylist_delete_item((void **)&ctable->classes, &ctable->count, _class);
 }
 static void _device_class_release(struct light_object *obj)
 {

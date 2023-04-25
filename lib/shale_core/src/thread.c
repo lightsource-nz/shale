@@ -76,7 +76,7 @@ uint8_t shale_thread_set_state(shale_thread_t *thread, uint8_t state)
     if(thread->thread_state == state)
         return SHALE_SUCCESS;
     if(state == SHALE_THREAD_ACTIVE) {
-        _list_delete_item((void**)thread_waiting, &thread_waiting_count, thread);
+        light_arraylist_delete_item((void**)thread_waiting, &thread_waiting_count, thread);
     }
 }
 

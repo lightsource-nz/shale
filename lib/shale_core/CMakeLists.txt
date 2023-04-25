@@ -11,6 +11,7 @@ target_sources(
     ${CMAKE_CURRENT_LIST_DIR}/src/shale_core.c
     ${CMAKE_CURRENT_LIST_DIR}/src/message.c
     ${CMAKE_CURRENT_LIST_DIR}/src/driver.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/interface.c
     ${CMAKE_CURRENT_LIST_DIR}/src/thread.c
 )
 

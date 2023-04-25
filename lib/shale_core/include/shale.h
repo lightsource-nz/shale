@@ -173,7 +173,7 @@ typedef struct device_manager {
 
 #define Message_Handler(name) uint8_t name(device_t *device, message_handle_t *handle)
 
-uint8_t shale_init();
+extern uint8_t shale_init();
 
 extern uint8_t *shale_class_describe(struct device_class *_class);
 extern uint8_t *shale_driver_describe(struct device_driver *driver);
@@ -197,8 +197,6 @@ extern device_t *shale_device_new_composite(uint8_t if_count, struct device_inte
 extern device_t *shale_device_new_composite_va(uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
 extern device_t *shale_device_new_composite_ctx(device_manager_t *ctx, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, ...);
 extern device_t *shale_device_new_composite_ctx_va(device_manager_t *ctx, uint8_t if_count, struct device_interface *interface[], const uint8_t *id_format, va_list vargs);
-extern device_t *shale_device_find(const uint8_t *id);
-extern device_t *shale_device_find_ctx(device_manager_t *ctx, const uint8_t *id);
 
 static inline device_t *shale_device_get(device_t *device)
 {
@@ -213,13 +211,17 @@ static inline const uint8_t *shale_device_name(device_t *device)
 {
         return light_object_get_name(&device->header);
 }
-bool shale_device_message_pending(device_t *device);
-message_handle_t *shale_device_message_get_next(device_t *device);
+extern bool shale_device_message_pending(device_t *device);
+extern message_handle_t *shale_device_message_get_next(device_t *device);
 
-struct device_manager *shale_device_manager_default();
-void shale_service_message_queues();
-void shale_service_message_queues_n(uint16_t count);
-void shale_device_manager_service_message_queues(device_manager_t *context);
-void shale_device_manager_service_message_queues_n(device_manager_t *context, uint16_t count);
+extern struct device_manager *shale_device_manager_default();
+extern void shale_service_message_queues();
+extern void shale_service_message_queues_n(uint16_t count);
+extern void shale_device_manager_service_message_queues(device_manager_t *context);
+extern void shale_device_manager_service_message_queues_n(device_manager_t *context, uint16_t count);
+extern uint8_t shale_device_manager_add_device(device_manager_t *context, device_t *device, const uint8_t *id_fornat, va_list vargs);
+extern uint8_t shale_device_manager_add_interface(device_manager_t *context, struct device_interface *interface, const uint8_t *id_format, va_list vargs);
+extern struct device_interface *shale_device_manager_interface_lookup(struct device_manager *context, const uint8_t *id);
+extern device_t *shale_device_manager_device_lookup(device_manager_t *context, const uint8_t *id);
 
 #endif
